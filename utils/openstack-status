@@ -1,0 +1,164 @@
+#!/bin/sh
+#
+# Copyright (C) 2012, Red Hat, Inc.
+# Pádraig Brady <pbrady@redhat.com>
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+
+systemctl --version >/dev/null 2>&1 && systemctl=1
+[ "$systemctl" ] || RUNLEVEL=$(LANG=C who -r | sed 's/.*run-level \([0-9]\).*/\1/')
+
+for conf in nova.conf keystone.conf glance-registry.conf; do
+    if grep -qF 'connection = mysql' /etc/nova/$conf 2>/dev/null; then
+        mysqld='mysqld'
+        break;
+    fi
+done
+
+rpm -q openstack-nova > /dev/null && nova='nova'
+rpm -q openstack-glance > /dev/null && glance='glance'
+rpm -q openstack-dashboard > /dev/null && dashboard='httpd'
+rpm -q openstack-keystone > /dev/null && keystone='keystone'
+rpm -q openstack-quantum > /dev/null && quantum='quantum'
+rpm -q libvirt > /dev/null && libvirtd='libvirtd'
+rpm -q qpid-cpp-server > /dev/null && qpidd='qpidd'
+rpm -q rabbitmq-server > /dev/null && rabbitmq='rabbitmq-server'
+
+if test "$qpidd" && test "$rabbitmq"; then
+  # Give preference to rabbit
+  # Unless nova is installed and qpid is specifed
+  if test "$nova" && grep -q '^rpc_backend.*qpid' /etc/nova/nova.conf; then
+    rabbitmq=''
+  else
+    qpidd=''
+  fi
+fi
+
+service_installed() {
+  chkconfig --list "$1" >/dev/null 2>&1
+}
+
+service_enabled() {
+  if [ "$systemctl" ]; then
+    systemctl --quiet is-enabled $1.service 2>/dev/null
+  else
+    chkconfig --levels $RUNLEVEL "$1"
+  fi
+}
+
+if service_enabled openstack-nova-volume 2>/dev/null; then
+  tgtd='tgtd'
+fi
+
+check_sysv_svc() {
+
+  printf '%-20s' "$svc:"
+  bootstatus=$(service_enabled $1 && echo enabled || echo disabled)
+  status=$(service $1 status >/dev/null 2>/dev/null && echo active || echo inactive)
+  if [ "$bootstatus" = 'disabled' ]; then
+    bootstatus=' (disabled on boot)'
+  else
+    bootstatus=''
+  fi
+  printf '%s\n' "$status$bootstatus"
+}
+
+check_svc() {
+
+  if [ ! "$systemctl" ]; then
+    check_sysv_svc "$@"
+    return
+  fi
+
+  printf '%-20s' "$svc:"
+  bootstatus=$(service_enabled $1 && echo enabled || echo disabled)
+  status=$(systemctl is-active $1.service 2>/dev/null)
+  # For "simple" systemd services you get
+  # "unknown" if you query a non enabled service
+  if [ "$bootstatus" = 'disabled' ]; then
+    bootstatus=' (disabled on boot)'
+    [ $status = 'unknown' ] && status='inactive'
+  else
+    bootstatus=''
+  fi
+  printf '%s\n' "$status$bootstatus"
+}
+
+
+if test "$nova"; then
+  printf "== Nova services ==\n"
+  service_installed openstack-nova-cert && cert=cert
+  for svc in api $cert compute network scheduler volume; do check_svc "openstack-nova-$svc"; done
+fi
+
+if test "$glance"; then
+  printf "== Glance services ==\n"
+  for svc in api registry; do check_svc "openstack-glance-$svc"; done
+fi
+
+if test "$keystone"; then
+  printf "== Keystone service ==\n"
+  for svc in $keystone; do check_svc "openstack-$svc"; done
+fi
+
+if test "$dashboard"; then
+  printf "== Horizon service ==\n"
+  horizon_status="$(curl -s -w '%{http_code}\n' http://localhost/dashboard -o /dev/null)"
+  [ "$horizon_status" = 200 ] && horizon_status=active
+  printf '%-20s%s\n' "dashboard:" "$horizon_status"
+fi
+
+if test "$quantum"; then
+  printf "== Quantum services ==\n"
+  if grep -q '^provider = quantum.plugins.linuxbridge' /etc/quantum/plugins.ini; then
+    quantum_plugin=quantum-linuxbridge-agent
+  fi
+  if grep -q '^provider = quantum.plugins.openvswitch' /etc/quantum/plugins.ini; then
+    quantum_plugin=quantum-openvswitch-agent
+    quantum_support=openvswitch
+  fi
+  for svc in quantum-server $quantum_plugin $quantum_support; do check_svc "$svc"; done
+fi
+
+printf "== Support services ==\n"
+for svc in $mysqld $dashboard $libvirtd $tgtd $qpidd $rabbitmq; do check_svc "$svc"; done
+
+if test "$keystone"; then
+  printf "== Keystone users ==\n"
+  if ! test "$ADMIN_TOKEN"; then
+    echo "Warning keystonerc not sourced" >&2
+  else
+    keystonerc=1
+    keystone user-list
+  fi
+fi
+
+if test "$glance"; then
+  printf "== Glance images ==\n"
+  glance index
+fi
+
+if test "$nova"; then
+  printf "== Nova instance flavors ==\n"
+  # Check direct access
+  nova-manage flavor list
+
+  printf "== Nova instances ==\n"
+  # Check access through the API
+  if [ ! "$keystonerc" ] && [ ! "$NOVA_USERNAME" ]; then
+    echo "Warning novarc not sourced" >&2
+  else
+    nova list # instances
+  fi
+fi

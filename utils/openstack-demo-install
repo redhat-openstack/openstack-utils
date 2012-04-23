@@ -1,0 +1,114 @@
+#!/bin/sh
+# Install and Enable all OpenStack services on a single node,
+# for testing/demonstration purposes.
+#
+# Copyright (C) 2012, Red Hat, Inc.
+# Pádraig Brady <pbrady@redhat.com>
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+
+if [ $(id -u) -ne 0 ]; then
+  echo 'Please run this as the root user' >&2
+  exit 1
+fi
+
+echo "======= Installing/Updating packages ======"
+
+yum -y install \
+ qpid-cpp-server \
+ @virtualization \
+ openstack-nova openstack-glance openstack-keystone openstack-swift\* openstack-dashboard
+
+echo "======= Setting up the databases ======"
+
+for APP in nova glance keystone; do
+  openstack-db -y --init --service $APP
+done
+
+# TODO determine if we're in a VM and auto do:
+#   openstack-config --set /etc/nova/nova.conf DEFAULT libvirt_type qemu
+
+# TODO support volumes (maybe as an option due to size)
+# Need to support setup on reboot also.
+# When this is done, add 'volume' to the nova services below
+# truncate -s20G /var/lib/nova/nova-volumes.img
+# vgcreate nova-volumes $(sudo losetup --show -f /var/lib/nova/nova-volumes.img)
+
+echo "======= Enabling the services ======"
+
+for svc in qpidd libvirtd httpd; do
+    chkconfig $svc on
+done
+for svc in api registry; do
+    chkconfig openstack-glance-$svc on
+done
+for svc in api objectstore compute network scheduler cert; do
+    chkconfig openstack-nova-$svc on
+done
+
+echo "======= Starting the services ======"
+
+for svc in qpidd libvirtd httpd; do
+    service start $svc
+done
+for svc in api registry; do
+    service start openstack-glance-$svc
+done
+for svc in api objectstore compute network scheduler cert; do
+    service start openstack-nova-$svc
+done
+
+echo "======= Setting up Keystone ======"
+
+# Set up a keystonerc file with a generated admin token and various passwords
+cat > ~/keystonerc <<EOF
+export ADMIN_TOKEN=$(openssl rand -hex 10)
+export OS_USERNAME=admin
+export OS_PASSWORD=verybadpass
+export OS_TENANT_NAME=admin
+export OS_AUTH_URL=http://127.0.0.1:5000/v2.0/
+EOF
+. ~/keystonerc
+
+# Set the administrative token in the config file
+openstack-config --set /etc/keystone/keystone.conf DEFAULT admin_token $ADMIN_TOKEN
+
+# Start and enable the Keystone service
+service start openstack-keystone
+
+# Create sample Tenants, Users and Roles
+ADMIN_PASSWORD=$OS_PASSWORD SERVICE_PASSWORD=servicepass openstack-keystone-sample-data
+
+# Change nova configuration to use keystone
+openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_tenant_name service
+openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_user nova
+openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_password servicepass
+openstack-config --set /etc/nova/nova.conf DEFAULT auth_strategy keystone
+service restart openstack-nova-api
+
+# Change glance configuration to use keystone
+openstack-config --set /etc/glance/glance-api.conf paste_deploy flavor keystone
+openstack-config --set /etc/glance/glance-registry.conf paste_deploy flavor keystone
+openstack-config --set /etc/glance/glance-api-paste.ini filter:authtoken admin_tenant_name service
+openstack-config --set /etc/glance/glance-api-paste.ini filter:authtoken admin_user glance
+openstack-config --set /etc/glance/glance-api-paste.ini filter:authtoken admin_password servicepass
+openstack-config --set /etc/glance/glance-registry-paste.ini filter:authtoken admin_tenant_name service
+openstack-config --set /etc/glance/glance-registry-paste.ini filter:authtoken admin_user glance
+openstack-config --set /etc/glance/glance-registry-paste.ini filter:authtoken admin_password servicepass
+for svc in api registry; do
+    service restart openstack-glance-$svc
+done
+
+echo "======= Running openstack-status ======"
+openstack-status
