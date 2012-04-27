@@ -28,7 +28,7 @@ only on localhost by user '<service>' with password '<service>'.
 The setup of a database with a multi-server OpenStack installation
 is outside of the scope of this simple helper script.
 
-Usage: openstack-db --project <service> --init|--drop [options]
+Usage: openstack-db --service <service> --init|--drop [options]
 Options:
   --help | -h
       Print usage information.
