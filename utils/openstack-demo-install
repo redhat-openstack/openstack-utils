@@ -102,7 +102,7 @@ EOF
 openstack-config --set /etc/keystone/keystone.conf DEFAULT admin_token $ADMIN_TOKEN
 
 # Start and enable the Keystone service
-service start openstack-keystone
+service openstack-keystone start
 
 # Create sample Tenants, Users and Roles
 ADMIN_PASSWORD=$OS_PASSWORD SERVICE_PASSWORD=servicepass openstack-keystone-sample-data
@@ -112,7 +112,7 @@ openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_tenant_nam
 openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_user nova
 openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_password servicepass
 openstack-config --set /etc/nova/nova.conf DEFAULT auth_strategy keystone
-service restart openstack-nova-api
+service openstack-nova-api restart
 
 # Change glance configuration to use keystone
 openstack-config --set /etc/glance/glance-api.conf paste_deploy flavor keystone
@@ -124,7 +124,7 @@ openstack-config --set /etc/glance/glance-registry-paste.ini filter:authtoken ad
 openstack-config --set /etc/glance/glance-registry-paste.ini filter:authtoken admin_user glance
 openstack-config --set /etc/glance/glance-registry-paste.ini filter:authtoken admin_password servicepass
 for svc in api registry; do
-    service restart openstack-glance-$svc
+    service openstack-glance-$svc restart
 done
 
 echo "======= Running openstack-status ======"
