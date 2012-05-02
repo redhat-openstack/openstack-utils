@@ -77,13 +77,13 @@ done
 echo "======= Starting the services ======"
 
 for svc in qpidd libvirtd httpd; do
-    service start $svc
+    service $svc start
 done
 for svc in api registry; do
-    service start openstack-glance-$svc
+    service openstack-glance-$svc start
 done
 for svc in api objectstore compute network scheduler cert; do
-    service start openstack-nova-$svc
+    service openstack-nova-$svc start
 done
 
 echo "======= Setting up Keystone ======"
