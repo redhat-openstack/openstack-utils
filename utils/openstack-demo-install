@@ -32,7 +32,8 @@ yum -y install \
  qpid-cpp-server \
  @virtualization \
  memcached \
- openstack-nova openstack-glance openstack-keystone openstack-swift\* openstack-dashboard
+ openstack-nova openstack-glance openstack-keystone openstack-dashboard \
+ openstack-swift\* openstack-quantum
 
 echo "======= Setting up the databases ======"
 
