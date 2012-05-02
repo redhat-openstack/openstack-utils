@@ -33,7 +33,7 @@ yum -y install \
  @virtualization \
  memcached \
  openstack-nova openstack-glance openstack-keystone openstack-dashboard \
- openstack-swift\* openstack-quantum
+ openstack-swift\* openstack-quantum openstack-utils
 
 echo "======= Setting up the databases ======"
 
