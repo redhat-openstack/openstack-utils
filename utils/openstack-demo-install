@@ -37,8 +37,20 @@ yum -y install \
 
 echo "======= Setting up the databases ======"
 
+getpassword()
+{
+  password='x'
+  until [ "$password" = "$rpassword" ]; do
+    read -s -p "Enter a password for the '$1' user : " password; echo >&2
+    read -s -p "Reenter password for the '$1' user : " rpassword; echo >&2
+  done
+  echo "$password"
+}
+
+ROOT_DB_PW=$(getpassword 'database root')
+
 for APP in nova glance keystone; do
-  openstack-db -y --init --service $APP
+  openstack-db -y --init --service $APP --rootpw "$ROOT_DB_PW"
 done
 
 # TODO determine if we're in a VM and auto do:
