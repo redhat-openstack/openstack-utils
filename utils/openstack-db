@@ -73,23 +73,18 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-if [ ! "$MODE" ]; then
-  printf 'Please specify either --init or --drop\n\n' >&2
+# Check mandatory args set
+if [ ! "$MODE" ] || [ ! "$APP" ]; then
   usage 1
 fi
 
-if [ ! "$APP" ]; then
-  printf 'Please specify a --service\n\n' >&2
-  usage 1
-else
-  case "$APP" in
-    nova|glance|keystone) ;;
-    *)
-      printf "Unrecognized --service $APP\n" >&2
-      printf "Please specify nova|glance|keystone\n" >&2
-      exit 1 ;;
-  esac
-fi
+case "$APP" in
+  nova|glance|keystone) ;;
+  *)
+    printf "Unrecognized --service $APP\n" >&2
+    printf "Please specify nova|glance|keystone\n" >&2
+    exit 1 ;;
+esac
 
 install_mysql_server() {
   if [ -z "${ASSUME_YES}" ]; then
