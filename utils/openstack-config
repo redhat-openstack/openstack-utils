@@ -22,30 +22,30 @@ import sys
 parameter = value = None
 
 def usage():
-  sys.stderr.write(sys.argv[0]+
+    sys.stderr.write(sys.argv[0] +
                      " --set|--del config_file section [parameter] [value]\n")
-  sys.exit(1)
+    sys.exit(1)
 
 try:
-  mode=sys.argv[1]
-  if mode not in ('--set', '--del'):
-      usage()
-  cfgfile=sys.argv[2]
-  section=sys.argv[3]
-  try:
-    parameter=sys.argv[4]
-    value=sys.argv[5]
-  except IndexError:
-     if mode == '--set':
-         usage()
-  else:
-    if mode == '--del':
-        sys.stderr.write("A value should not be specified with --del\n")
+    mode = sys.argv[1]
+    if mode not in ('--set', '--del'):
         usage()
+    cfgfile = sys.argv[2]
+    section = sys.argv[3]
+    try:
+        parameter = sys.argv[4]
+        value = sys.argv[5]
+    except IndexError:
+        if mode == '--set':
+            usage()
+    else:
+        if mode == '--del':
+            sys.stderr.write("A value should not be specified with --del\n")
+            usage()
 except IndexError:
-  usage()
+    usage()
 
-conf=iniparse.ConfigParser()
+conf = iniparse.ConfigParser()
 conf.readfp(open(cfgfile))
 
 if mode == '--set':
