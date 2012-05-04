@@ -38,6 +38,10 @@ try:
   except IndexError:
      if mode == '--set':
          usage()
+  else:
+    if mode == '--del':
+        sys.stderr.write("A value should not be specified with --del\n")
+        usage()
 except IndexError:
   usage()
 
