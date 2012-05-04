@@ -46,7 +46,7 @@ except IndexError:
   usage()
 
 conf=iniparse.ConfigParser()
-conf.read(cfgfile)
+conf.readfp(open(cfgfile))
 
 if mode == '--set':
     if not conf.has_section(section):
