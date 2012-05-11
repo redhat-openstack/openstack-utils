@@ -120,7 +120,9 @@ openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_tenant_nam
 openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_user nova
 openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_password servicepass
 openstack-config --set /etc/nova/nova.conf DEFAULT auth_strategy keystone
-service openstack-nova-api restart
+for svc in api compute; do
+    service openstack-nova-$svc restart
+done
 
 # Change glance configuration to use keystone
 openstack-config --set /etc/glance/glance-api.conf paste_deploy flavor keystone
