@@ -1,0 +1,14 @@
+2012.1-2 22-05-2012
+  openstack-config:
+    Improve validation of options
+    Ensure new config files are not created
+  openstack-db:
+    Correct a typo in the options description
+  openstack-demo-install:
+    Fix service setup commands
+    Fix keystone startup race
+    Minimize prompts for the database password
+    Install quantum
+
+2012.1-1 11-04-2012
+  Initial release
