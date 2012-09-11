@@ -104,12 +104,15 @@ done
 echo "======= Setting up Keystone ======"
 
 # Set up a keystonerc file with a generated admin token and various passwords
+TOKEN=$(openssl rand -hex 10)
 cat > ~/keystonerc <<EOF
-export ADMIN_TOKEN=$(openssl rand -hex 10)
+export ADMIN_TOKEN=$TOKEN
 export OS_USERNAME=admin
 export OS_PASSWORD=verybadpass
 export OS_TENANT_NAME=admin
 export OS_AUTH_URL=http://127.0.0.1:5000/v2.0/
+export SERVICE_TOKEN=$TOKEN
+export SERVICE_ENDPOINT=http://127.0.0.1:35357/v2.0
 EOF
 . ~/keystonerc
 
