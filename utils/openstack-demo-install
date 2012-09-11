@@ -118,6 +118,7 @@ openstack-config --set /etc/keystone/keystone.conf DEFAULT admin_token $ADMIN_TO
 
 # Start and enable the Keystone service
 service openstack-keystone start
+chkconfig openstack-keystone on
 
 # wait for the keystone service to start
 tries=0
