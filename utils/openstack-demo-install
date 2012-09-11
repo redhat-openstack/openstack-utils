@@ -35,7 +35,8 @@ yum -y install \
  @virtualization \
  memcached \
  openstack-nova openstack-glance openstack-keystone openstack-dashboard \
- openstack-swift\* openstack-quantum openstack-utils
+ openstack-swift\* openstack-quantum \
+ openstack-utils virt-what
 
 echo "======= Setting up the databases ======"
 
@@ -55,8 +56,20 @@ for APP in nova glance keystone; do
   openstack-db -y --init --service $APP --rootpw "$ROOT_DB_PW"
 done
 
-# TODO determine if we're in a VM and auto do:
-#   openstack-config --set /etc/nova/nova.conf DEFAULT libvirt_type qemu
+if virt-what | grep -q .; then
+  # We're running in a VM so set nova-compute up appropriately
+  echo '======= Configuring VM. Please wait =======' >&2
+  fedora_ver="0$(sed -n 's/Fedora release \([0-9]*\).*/\1/p' /etc/issue)"
+  openstack-config --set /etc/nova/nova.conf DEFAULT libvirt_type qemu
+  if [ "$fedora_ver" -ge 16 ]; then
+    setsebool -P virt_use_execmem on
+  fi
+  # Note if running on RHEL (derivatives) <= 6.3 then
+  # You'll need to issue these commands
+  #  ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-system-x86_64
+  #  service libvirtd restart
+  # See https://bugzilla.redhat.com/show_bug.cgi?id=813735
+fi
 
 # TODO support volumes (maybe as an option due to size)
 # Need to support setup on reboot also.
