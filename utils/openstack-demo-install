@@ -25,12 +25,23 @@ if [ $(id -u) -ne 0 ]; then
   exit 1
 fi
 
+if [ "$1" = "--testing" ]; then
+  testing=1
+  shift
+elif [ "$1" ]; then
+  echo "$(basename $0) [--testing]" >&2
+  exit 1
+fi
+
+
 echo "======= Installing/Updating packages ======"
+
+[ "$testing" ] && enable_testing='--enablerepo=updates-testing'
 
 # memcached is needed by swift
 # qpid AMQP broker is needed by most services
 # virtualization capabilities are needed by nova
-yum -y install \
+yum -y $enable_testing install \
  qpid-cpp-server-daemon \
  @virtualization \
  memcached \
