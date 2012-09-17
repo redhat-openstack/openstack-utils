@@ -36,8 +36,10 @@ yum -y install \
  @virtualization \
  memcached \
  openstack-nova openstack-glance openstack-keystone openstack-dashboard \
- openstack-swift\* openstack-quantum \
+ openstack-swift\* openstack-quantum openstack-cinder \
  openstack-utils virt-what
+
+rpm -q openstack-cinder >/dev/null 2>&1 && cinder='cinder'
 
 echo "======= Setting up the databases ======"
 
@@ -53,7 +55,7 @@ getpassword()
 
 ROOT_DB_PW=$(getpassword 'database root')
 
-for APP in nova glance keystone; do
+for APP in nova glance keystone $cinder; do
   openstack-db -y --init --service $APP --rootpw "$ROOT_DB_PW"
 done
 
@@ -70,6 +72,14 @@ if virt-what | grep -q .; then
   #  ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-system-x86_64
   #  service libvirtd restart
   # See https://bugzilla.redhat.com/show_bug.cgi?id=813735
+fi
+
+# Configure cinder with nova and keystone if installed
+if [ "$cinder" ]; then
+  # Change nova configuration to use cinder
+  openstack-config --set /etc/nova/nova.conf DEFAULT volume_api_class nova.volume.cinder.API
+  # The following is the default apis with 'osapi_volume' removed
+  openstack-config --set /etc/nova/nova.conf DEFAULT enabled_apis ec2,osapi_compute,metadata
 fi
 
 # TODO support volumes (maybe as an option due to size)
@@ -89,6 +99,11 @@ done
 for svc in api objectstore compute network scheduler cert; do
     chkconfig openstack-nova-$svc on
 done
+if [ "$cinder" ]; then
+  for svc in api scheduler; do
+    chkconfig openstack-cinder-$svc on
+  done
+fi
 
 echo "======= Starting the services ======"
 
@@ -101,6 +116,11 @@ done
 for svc in api objectstore compute network scheduler cert; do
     service openstack-nova-$svc start
 done
+if [ "$cinder" ]; then
+  for svc in api scheduler; do
+    service openstack-cinder-$svc start
+  done
+fi
 
 echo "======= Setting up Keystone ======"
 
@@ -167,6 +187,18 @@ done
 for svc in api registry; do
     service openstack-glance-$svc restart
 done
+
+# Change cinder configuration to use keystone
+if [ "$cinder" ]; then
+  openstack-config --set /etc/cinder/cinder.conf DEFAULT auth_strategy keystone
+  openstack-config --set /etc/cinder/cinder.conf keystone_authtoken admin_tenant_name service
+  openstack-config --set /etc/cinder/cinder.conf keystone_authtoken admin_user cinder
+  openstack-config --set /etc/cinder/cinder.conf keystone_authtoken admin_password servicepass
+
+  for svc in api scheduler; do
+    service openstack-cinder-$svc restart
+  done
+fi
 
 # We can only setup Swift for packages that contain example config files
 [ -e /etc/swift/proxy-server.conf ] && setup_swift

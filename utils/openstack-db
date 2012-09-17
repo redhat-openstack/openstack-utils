@@ -79,10 +79,10 @@ if [ ! "$MODE" ] || [ ! "$APP" ]; then
 fi
 
 case "$APP" in
-  nova|glance|keystone) ;;
+  nova|glance|keystone|cinder) ;;
   *)
     printf "Unrecognized --service $APP\n" >&2
-    printf "Please specify nova|glance|keystone\n" >&2
+    printf "Please specify nova|glance|keystone|cinder\n" >&2
     exit 1 ;;
 esac
 
@@ -251,7 +251,11 @@ if [ "$MODE" = 'init' ]; then
 
   # Ask openstack-$APP to sync the db.
   echo "Asking openstack-$APP to sync the database."
-  [ "${APP}" = "nova" ] && db_sync='db sync' || db_sync='db_sync'
+  if [ "${APP}" = "nova" ] || [ "${APP}" = "cinder" ]; then
+    db_sync='db sync'
+  else
+    db_sync='db_sync'
+  fi
   # Run as $APP user so any newly created (log) files have correct ownership
   runuser -s /bin/sh $APP -c "$APP-manage $db_sync"
 
