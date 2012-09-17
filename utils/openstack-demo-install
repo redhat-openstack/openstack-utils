@@ -188,6 +188,36 @@ for svc in api registry; do
     service openstack-glance-$svc restart
 done
 
+cinder_keystone_sample_data()
+{
+  # TODO: Move this to openstack-keystone-sample-data
+
+  get_id () { echo $("$@" | grep ' id ' | awk '{print $4}'); }
+  ADMIN_PASSWORD=$OS_PASSWORD
+  SERVICE_HOST=127.0.0.1
+  SERVICE_PASSWORD=servicepass
+  SERVICE_TENANT=$(keystone tenant-list | grep service | awk '{print $2}')
+  ADMIN_ROLE=$(keystone role-list | grep ' admin ' | awk '{print $2}')
+
+  CINDER_USER=$(get_id keystone user-create --name=cinder \
+                                            --pass="$SERVICE_PASSWORD" \
+                                            --tenant_id $SERVICE_TENANT \
+                                            --email=cinder@example.com)
+  keystone user-role-add --tenant_id $SERVICE_TENANT \
+                         --user_id $CINDER_USER \
+                         --role_id $ADMIN_ROLE
+  CINDER_SERVICE=$(get_id keystone service-create \
+      --name=cinder \
+      --type=volume \
+      --description="Cinder Service")
+  keystone endpoint-create \
+      --region RegionOne \
+      --service_id $CINDER_SERVICE \
+      --publicurl "http://$SERVICE_HOST:8776/v1/\$(tenant_id)s" \
+      --adminurl "http://$SERVICE_HOST:8776/v1/\$(tenant_id)s" \
+      --internalurl "http://$SERVICE_HOST:8776/v1/\$(tenant_id)s"
+}
+
 # Change cinder configuration to use keystone
 if [ "$cinder" ]; then
   openstack-config --set /etc/cinder/cinder.conf DEFAULT auth_strategy keystone
@@ -195,17 +225,19 @@ if [ "$cinder" ]; then
   openstack-config --set /etc/cinder/cinder.conf keystone_authtoken admin_user cinder
   openstack-config --set /etc/cinder/cinder.conf keystone_authtoken admin_password servicepass
 
+  cinder_keystone_sample_data
+
+  # Start the services
+  # Note volume requires the cinder-volumes volume group
+  # to be available, so we don't enable that by default
   for svc in api scheduler; do
     service openstack-cinder-$svc restart
   done
 fi
 
-# We can only setup Swift for packages that contain example config files
-[ -e /etc/swift/proxy-server.conf ] && setup_swift
-
-setup_swift()
+swift_keystone_sample_data()
 {
-  echo "======= Setting up Swift ======"
+  # TODO: Move this to openstack-keystone-sample-data
 
   # Add the swift endpoint
   SWIFTSERIVEID=$(keystone service-list | grep object-store | awk '{print $2}')
@@ -213,12 +245,19 @@ setup_swift()
                            --publicurl   'http://127.0.0.1:8080/v1/AUTH_$(tenant_id)s' \
                            --adminurl    'http://127.0.0.1:8080/v1/AUTH_$(tenant_id)s' \
                            --internalurl 'http://127.0.0.1:8080/v1/AUTH_$(tenant_id)s'
+}
+
+setup_swift()
+{
+  echo "======= Setting up Swift ======"
 
   # edit default config
   openstack-config --set /etc/swift/proxy-server.conf filter:authtoken admin_tenant_name service
   openstack-config --set /etc/swift/proxy-server.conf filter:authtoken admin_user swift
   openstack-config --set /etc/swift/proxy-server.conf filter:authtoken admin_password servicepass
   openstack-config --set /etc/swift/swift.conf swift-hash swift_hash_path_suffix $(openssl rand -hex 10)
+
+  swift_keystone_sample_data
 
   # Create ringfiles and storage devices
   swift-ring-builder /etc/swift/account.builder create 12 3 1
@@ -256,6 +295,9 @@ setup_swift()
     done
   done
 }
+
+# We can only setup Swift for packages that contain example config files
+[ -e /etc/swift/proxy-server.conf ] && setup_swift
 
 echo "======= Running openstack-status ======"
 openstack-status
