@@ -133,8 +133,8 @@ until keystone user-list >/dev/null 2>&1; do
 done
 
 # Create sample Tenants, Users and Roles
-ADMIN_PASSWORD=$OS_PASSWORD SERVICE_PASSWORD=servicepass ENABLE_QUANTUM=1 \
-openstack-keystone-sample-data
+ADMIN_PASSWORD=$OS_PASSWORD SERVICE_PASSWORD=servicepass \
+ENABLE_QUANTUM=1 ENABLE_SWIFT=1 openstack-keystone-sample-data
 
 # Change nova configuration to use keystone
 openstack-config --set /etc/nova/nova.conf DEFAULT auth_strategy keystone
@@ -167,6 +167,63 @@ done
 for svc in api registry; do
     service openstack-glance-$svc restart
 done
+
+# We can only setup Swift for packages that contain example config files
+[ -e /etc/swift/proxy-server.conf ] && setup_swift
+
+setup_swift()
+{
+  echo "======= Setting up Swift ======"
+
+  # Add the swift endpoint
+  SWIFTSERIVEID=$(keystone service-list | grep object-store | awk '{print $2}')
+  keystone endpoint-create --service_id $SWIFTSERIVEID \
+                           --publicurl   'http://127.0.0.1:8080/v1/AUTH_$(tenant_id)s' \
+                           --adminurl    'http://127.0.0.1:8080/v1/AUTH_$(tenant_id)s' \
+                           --internalurl 'http://127.0.0.1:8080/v1/AUTH_$(tenant_id)s'
+
+  # edit default config
+  openstack-config --set /etc/swift/proxy-server.conf filter:authtoken admin_tenant_name service
+  openstack-config --set /etc/swift/proxy-server.conf filter:authtoken admin_user swift
+  openstack-config --set /etc/swift/proxy-server.conf filter:authtoken admin_password servicepass
+  openstack-config --set /etc/swift/swift.conf swift-hash swift_hash_path_suffix $(openssl rand -hex 10)
+
+  # Create ringfiles and storage devices
+  swift-ring-builder /etc/swift/account.builder create 12 3 1
+  swift-ring-builder /etc/swift/container.builder create 12 3 1
+  swift-ring-builder /etc/swift/object.builder create 12 3 1
+  for zone in 1 2 3 4; do
+    truncate /var/tmp/swift-storage-$zone --size 5G
+    DEVICE=$(losetup --show -f  /var/tmp/swift-storage-$zone)
+    mkfs.ext4 -I 1024 $DEVICE
+    mkdir -p /srv/node/device$zone
+    mount -o noatime,nodiratime,nobarrier,user_xattr $DEVICE /srv/node/device$zone
+    swift-ring-builder /etc/swift/account.builder add z$zone-127.0.0.1:6002/device$zone 100
+    swift-ring-builder /etc/swift/container.builder add z$zone-127.0.0.1:6001/device$zone 100
+    swift-ring-builder /etc/swift/object.builder add z$zone-127.0.0.1:6000/device$zone 100
+  done
+  swift-ring-builder /etc/swift/account.builder rebalance
+  swift-ring-builder /etc/swift/container.builder rebalance
+  swift-ring-builder /etc/swift/object.builder rebalance
+
+  # Make sure swift owns the ring file
+  chown -R swift:swift /etc/swift/*gz /srv/node
+
+  # Start the services
+  service memcached start
+  chkconfig memcached on
+  service openstack-swift-proxy start
+  chkconfig openstack-swift-proxy on
+  for ringtype in account container object; do
+    service openstack-swift-$ringtype start
+    chkconfig openstack-swift-$ringtype on
+    for service in replicator updater auditor; do
+      if [ $ringtype != 'account' ] || [ $service != 'updater' ]; then
+        swift-init $ringtype-$service start
+      fi
+    done
+  done
+}
 
 echo "======= Running openstack-status ======"
 openstack-status
