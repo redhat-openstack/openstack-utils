@@ -32,7 +32,7 @@ echo "======= Installing/Updating packages ======"
 # qpid AMQP broker is needed by most services
 # virtualization capabilities are needed by nova
 yum -y install \
- qpid-cpp-server-daemon \
+ qpid-cpp-server qpid-cpp-server-daemon \
  @virtualization \
  memcached \
  openstack-nova openstack-glance openstack-keystone openstack-dashboard \
