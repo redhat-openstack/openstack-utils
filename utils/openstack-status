@@ -31,9 +31,11 @@ rpm -q openstack-glance > /dev/null && glance='glance'
 rpm -q openstack-dashboard > /dev/null && dashboard='httpd'
 rpm -q openstack-keystone > /dev/null && keystone='keystone'
 rpm -q openstack-quantum > /dev/null && quantum='quantum'
+rpm -q openstack-swift > /dev/null && swift='swift'
 rpm -q libvirt > /dev/null && libvirtd='libvirtd'
 rpm -q qpid-cpp-server > /dev/null && qpidd='qpidd'
 rpm -q rabbitmq-server > /dev/null && rabbitmq='rabbitmq-server'
+rpm -q memcached > /dev/null && memcached='memcached'
 
 if test "$qpidd" && test "$rabbitmq"; then
   # Give preference to rabbit
@@ -131,8 +133,24 @@ if test "$quantum"; then
   for svc in quantum-server $quantum_plugin $quantum_support; do check_svc "$svc"; done
 fi
 
+if test "$swift"; then
+  printf "== Swift services ==\n"
+  check_svc openstack-swift-proxy
+  for ringtype in account container object; do
+    check_svc openstack-swift-$ringtype
+    for service in replicator updater auditor; do
+      if [ $ringtype != 'account' ] || [ $service != 'updater' ]; then
+        : # TODO how to check status of:
+          # swift-init $ringtype-$service
+      fi
+    done
+  done
+fi
+
 printf "== Support services ==\n"
-for svc in $mysqld $dashboard $libvirtd $tgtd $qpidd $rabbitmq; do check_svc "$svc"; done
+for svc in $mysqld $dashboard $libvirtd $tgtd $qpidd $rabbitmq $memcached; do
+  check_svc "$svc"
+done
 
 if test "$keystone"; then
   printf "== Keystone users ==\n"
