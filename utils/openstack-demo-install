@@ -124,21 +124,22 @@ fi
 
 echo "======= Setting up Keystone ======"
 
-# Set up a keystonerc file with a generated admin token and various passwords
-TOKEN=$(openssl rand -hex 10)
+# Set up a keystonerc file with admin password
 cat > ~/keystonerc <<EOF
-export ADMIN_TOKEN=$TOKEN
 export OS_USERNAME=admin
 export OS_PASSWORD=verybadpass
 export OS_TENANT_NAME=admin
 export OS_AUTH_URL=http://127.0.0.1:5000/v2.0/
-export SERVICE_TOKEN=$TOKEN
-export SERVICE_ENDPOINT=http://127.0.0.1:35357/v2.0
 EOF
+
+# Service token is needed to bootstrap keystone commands
+export SERVICE_TOKEN=$(openssl rand -hex 10)
+export SERVICE_ENDPOINT=http://127.0.0.1:35357/v2.0
+
 . ~/keystonerc
 
 # Set the administrative token in the config file
-openstack-config --set /etc/keystone/keystone.conf DEFAULT admin_token $ADMIN_TOKEN
+openstack-config --set /etc/keystone/keystone.conf DEFAULT admin_token $SERVICE_TOKEN
 
 # Start and enable the Keystone service
 service openstack-keystone start
