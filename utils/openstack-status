@@ -163,7 +163,7 @@ done
 
 if test "$keystone"; then
   printf "== Keystone users ==\n"
-  if ! test "$ADMIN_TOKEN"; then
+  if ! test "$OS_USERNAME"; then
     echo "Warning keystonerc not sourced" >&2
   else
     keystonerc=1
@@ -171,21 +171,21 @@ if test "$keystone"; then
   fi
 fi
 
-if test "$glance"; then
+if test "$keystonerc" && test "$glance"; then
   printf "== Glance images ==\n"
   glance index
 fi
 
 if test "$nova"; then
-  printf "== Nova instance flavors ==\n"
-  # Check direct access
-  nova-manage flavor list
-
-  printf "== Nova instances ==\n"
-  # Check access through the API
-  if [ ! "$keystonerc" ] && [ ! "$NOVA_USERNAME" ]; then
-    echo "Warning novarc not sourced" >&2
+  if ! test "$keystonerc" && ! test "$NOVA_USERNAME"; then
+    test "$keystone" || echo "Warning novarc not sourced" >&2
   else
+    printf "== Nova instance flavors ==\n"
+    # Check direct access
+    nova-manage flavor list
+
+    printf "== Nova instances ==\n"
+    # Check access through the API
     nova list # instances
   fi
 fi
