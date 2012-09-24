@@ -64,6 +64,8 @@ if virt-what | grep -q .; then
   echo '======= Configuring VM. Please wait =======' >&2
   fedora_ver="0$(sed -n 's/Fedora release \([0-9]*\).*/\1/p' /etc/issue)"
   openstack-config --set /etc/nova/nova.conf DEFAULT libvirt_type qemu
+  # Workaround (https://bugzilla.redhat.com/show_bug.cgi?id=858311)
+  openstack-config --set /etc/nova/nova.conf DEFAULT libvirt_cpu_mode none
   if [ "$fedora_ver" -ge 16 ]; then
     setsebool -P virt_use_execmem on
   fi
