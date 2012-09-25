@@ -143,6 +143,9 @@ export SERVICE_ENDPOINT=http://127.0.0.1:35357/v2.0
 # Set the administrative token in the config file
 openstack-config --set /etc/keystone/keystone.conf DEFAULT admin_token $SERVICE_TOKEN
 
+# Stop keystone if it is already running (to reload the new admin token)
+service openstack-keystone status && service openstack-keystone stop
+
 # Start and enable the Keystone service
 service openstack-keystone start
 chkconfig openstack-keystone on
