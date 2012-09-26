@@ -60,7 +60,8 @@ service_enabled() {
   fi
 }
 
-if service_enabled openstack-nova-volume 2>/dev/null; then
+if service_enabled openstack-nova-volume 2>/dev/null ||
+   service_enabled openstack-cinder-volume 2>/dev/null; then
   tgtd='tgtd'
 fi
 
