@@ -76,6 +76,10 @@ if virt-what | grep -q .; then
   # See https://bugzilla.redhat.com/show_bug.cgi?id=813735
 fi
 
+# Allow httpd (horizon) to connect to other services
+setsebool -P httpd_can_network_connect=on
+service httpd restart
+
 # Configure cinder with nova and keystone if installed
 if [ "$cinder" ]; then
   # Change nova configuration to use cinder
@@ -308,3 +312,6 @@ setup_swift()
 
 echo "======= Running openstack-status ======"
 openstack-status
+
+echo "The OpenStack web interface is running at http://localhost/dashboard"
+echo "(Use User:$OS_USERNAME and Password:$OS_PASSWORD)"
