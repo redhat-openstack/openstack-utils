@@ -165,7 +165,7 @@ done
 
 # Create sample Tenants, Users and Roles
 ADMIN_PASSWORD=$OS_PASSWORD SERVICE_PASSWORD=servicepass \
-ENABLE_QUANTUM=1 ENABLE_SWIFT=1 openstack-keystone-sample-data
+ENABLE_SWIFT=1 openstack-keystone-sample-data
 
 # Change nova configuration to use keystone
 openstack-config --set /etc/nova/nova.conf DEFAULT auth_strategy keystone
