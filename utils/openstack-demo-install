@@ -36,10 +36,20 @@ yum -y install \
  @virtualization \
  memcached \
  openstack-nova openstack-glance openstack-keystone openstack-dashboard \
- openstack-swift\* openstack-quantum openstack-cinder \
- openstack-utils virt-what
+ openstack-swift\* openstack-quantum \
+ openstack-utils virt-what \
+ -x openstack-swift-plugin-swift3
 
-rpm -q openstack-cinder >/dev/null 2>&1 && cinder='cinder'
+if rpm -q openstack-nova-common-2012.1 >/dev/null 2>&1; then
+  os_dist='essex'
+else
+  os_dist='>=folsom'
+fi
+
+if [ "$os_dist" = '>=folsom' ]; then
+  yum install -y openstack-cinder openstack-swift-plugin-swift3
+  cinder='cinder'
+fi
 
 echo "======= Setting up the databases ======"
 
@@ -169,7 +179,7 @@ ENABLE_SWIFT=1 openstack-keystone-sample-data
 
 # Change nova configuration to use keystone
 openstack-config --set /etc/nova/nova.conf DEFAULT auth_strategy keystone
-if rpm -q openstack-nova-common-2012.1 >/dev/null 2>&1; then # essex
+if [ "$os_dist" = 'essex' ]; then
   openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_tenant_name service
   openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_user nova
   openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_password servicepass
@@ -185,7 +195,7 @@ done
 # Change glance configuration to use keystone
 for svc in api registry; do
   openstack-config --set /etc/glance/glance-$svc.conf paste_deploy flavor keystone
-  if rpm -q openstack-glance-2012.1 >/dev/null 2>&1; then # essex
+  if [ "$os_dist" = 'essex' ]; then
     openstack-config --set /etc/glance/glance-$svc-paste.ini filter:authtoken admin_tenant_name service
     openstack-config --set /etc/glance/glance-$svc-paste.ini filter:authtoken admin_user glance
     openstack-config --set /etc/glance/glance-$svc-paste.ini filter:authtoken admin_password servicepass
