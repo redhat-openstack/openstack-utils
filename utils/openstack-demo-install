@@ -40,7 +40,8 @@ yum -y install \
  openstack-utils virt-what \
  -x openstack-swift-plugin-swift3
 
-if rpm -q openstack-nova-common-2012.1 >/dev/null 2>&1; then
+if rpm -q openstack-nova-common-2012.1.* >/dev/null 2>&1 ||
+   rpm -q openstack-nova-common-2012.1 >/dev/null 2>&1; then
   os_dist='essex'
 else
   os_dist='>=folsom'
