@@ -35,8 +35,11 @@ yum install openstack-nova-common -y
 if rpm -q openstack-nova-common-2012.1.* >/dev/null 2>&1 ||
    rpm -q openstack-nova-common-2012.1 >/dev/null 2>&1; then
   os_dist='essex'
-else 
+elif rpm -q openstack-nova-common-2012.2.* >/dev/null 2>&1 ||
+     rpm -q openstack-nova-common-2012.2 >/dev/null 2>&1; then
   os_dist='folsom'
+else
+  os_dist='grizzly'
 fi
 
 echo "About to run $os_dist"
@@ -123,6 +126,9 @@ done
 for svc in api objectstore compute network scheduler cert; do
     chkconfig openstack-nova-$svc on
 done
+if [ "$os_dist" == 'grizzly' ]; then
+    chkconfig openstack-nova-conductor on
+fi
 if [ "$cinder" ]; then
   for svc in api scheduler; do
     chkconfig openstack-cinder-$svc on
@@ -140,6 +146,9 @@ done
 for svc in api objectstore compute network scheduler cert; do
     service openstack-nova-$svc start
 done
+if [ "$os_dist" == 'grizzly' ]; then
+    service openstack-nova-conductor start
+fi
 if [ "$cinder" ]; then
   for svc in api scheduler; do
     service openstack-cinder-$svc start
@@ -165,6 +174,10 @@ export SERVICE_ENDPOINT=http://127.0.0.1:35357/v2.0
 # Set the administrative token in the config file
 openstack-config --set /etc/keystone/keystone.conf DEFAULT admin_token $SERVICE_TOKEN
 
+#Generate keystone certs
+keystone-manage pki_setup
+chown -R keystone /etc/keystone/ssl/
+
 # Stop keystone if it is already running (to reload the new admin token)
 service openstack-keystone status >/dev/null 2>&1 &&
   service openstack-keystone stop
@@ -187,11 +200,11 @@ ENABLE_SWIFT=1 openstack-keystone-sample-data
 
 # Change nova configuration to use keystone
 openstack-config --set /etc/nova/nova.conf DEFAULT auth_strategy keystone
-if [ "$os_dist" = 'essex' ]; then
+if [ "$os_dist" == 'essex' -o "$os_dist" == 'grizzly' ]; then
   openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_tenant_name service
   openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_user nova
   openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_password servicepass
-else # >= folsom
+else #folsom
   openstack-config --set /etc/nova/nova.conf keystone_authtoken admin_tenant_name service
   openstack-config --set /etc/nova/nova.conf keystone_authtoken admin_user nova
   openstack-config --set /etc/nova/nova.conf keystone_authtoken admin_password servicepass
@@ -203,11 +216,11 @@ done
 # Change glance configuration to use keystone
 for svc in api registry; do
   openstack-config --set /etc/glance/glance-$svc.conf paste_deploy flavor keystone
-  if [ "$os_dist" = 'essex' ]; then
+  if [ "$os_dist" == 'essex' -o "$os_dist" == 'grizzly' ]; then
     openstack-config --set /etc/glance/glance-$svc-paste.ini filter:authtoken admin_tenant_name service
     openstack-config --set /etc/glance/glance-$svc-paste.ini filter:authtoken admin_user glance
     openstack-config --set /etc/glance/glance-$svc-paste.ini filter:authtoken admin_password servicepass
-  else # >= folsom
+  else #folsom
     openstack-config --set /etc/glance/glance-$svc.conf keystone_authtoken admin_tenant_name service
     openstack-config --set /etc/glance/glance-$svc.conf keystone_authtoken admin_user glance
     openstack-config --set /etc/glance/glance-$svc.conf keystone_authtoken admin_password servicepass

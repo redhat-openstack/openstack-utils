@@ -103,7 +103,7 @@ check_svc() {
 if test "$nova"; then
   printf "== Nova services ==\n"
   service_installed openstack-nova-cert && cert=cert
-  for svc in api $cert compute network scheduler volume; do check_svc "openstack-nova-$svc"; done
+  for svc in api $cert compute network scheduler volume conductor; do check_svc "openstack-nova-$svc"; done
 fi
 
 if test "$glance"; then
