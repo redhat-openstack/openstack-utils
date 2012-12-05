@@ -28,6 +28,25 @@ fi
 
 echo "======= Installing/Updating packages ======"
 
+#install nova-common first to see what version it is
+yum install openstack-nova-common -y
+
+#determine which OpenStack version we'll be running
+if rpm -q openstack-nova-common-2012.1.* >/dev/null 2>&1 ||
+   rpm -q openstack-nova-common-2012.1 >/dev/null 2>&1; then
+  os_dist='essex'
+else 
+  os_dist='folsom'
+fi
+
+echo "About to run $os_dist"
+
+# Install these first if running folsom and grizzly
+# because are not present in essex
+if [ "$os_dist" == 'folsom' -o "$os_dist" == 'grizzly' ]; then
+  yum install -y openstack-cinder openstack-swift-plugin-swift3
+  cinder='cinder'
+fi
 # memcached is needed by swift
 # qpid AMQP broker is needed by most services
 # virtualization capabilities are needed by nova
@@ -39,18 +58,6 @@ yum -y install \
  openstack-swift\* openstack-quantum \
  openstack-utils virt-what \
  -x openstack-swift-plugin-swift3
-
-if rpm -q openstack-nova-common-2012.1.* >/dev/null 2>&1 ||
-   rpm -q openstack-nova-common-2012.1 >/dev/null 2>&1; then
-  os_dist='essex'
-else
-  os_dist='>=folsom'
-fi
-
-if [ "$os_dist" = '>=folsom' ]; then
-  yum install -y openstack-cinder openstack-swift-plugin-swift3
-  cinder='cinder'
-fi
 
 echo "======= Setting up the databases ======"
 
