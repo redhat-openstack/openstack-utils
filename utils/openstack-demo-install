@@ -44,9 +44,8 @@ fi
 
 echo "About to run $os_dist"
 
-# Install these first if running folsom and grizzly
-# because are not present in essex
-if [ "$os_dist" == 'folsom' -o "$os_dist" == 'grizzly' ]; then
+# Install these first if not on essex
+if [ "$os_dist" != 'essex' ]; then
   yum install -y openstack-cinder openstack-swift-plugin-swift3
   cinder='cinder'
 fi
@@ -61,6 +60,10 @@ yum -y install \
  openstack-swift\* openstack-quantum \
  openstack-utils virt-what \
  -x openstack-swift-plugin-swift3
+
+if [ "$os_dist" == 'grizzly' ]; then
+  conductor='conductor'
+fi
 
 echo "======= Setting up the databases ======"
 
@@ -123,12 +126,9 @@ done
 for svc in api registry; do
     chkconfig openstack-glance-$svc on
 done
-for svc in api objectstore compute network scheduler cert; do
+for svc in api objectstore compute network scheduler cert $conductor; do
     chkconfig openstack-nova-$svc on
 done
-if [ "$os_dist" == 'grizzly' ]; then
-    chkconfig openstack-nova-conductor on
-fi
 if [ "$cinder" ]; then
   for svc in api scheduler; do
     chkconfig openstack-cinder-$svc on
@@ -143,12 +143,9 @@ done
 for svc in api registry; do
     service openstack-glance-$svc start
 done
-for svc in api objectstore compute network scheduler cert; do
+for svc in api objectstore compute network scheduler cert $conductor; do
     service openstack-nova-$svc start
 done
-if [ "$os_dist" == 'grizzly' ]; then
-    service openstack-nova-conductor start
-fi
 if [ "$cinder" ]; then
   for svc in api scheduler; do
     service openstack-cinder-$svc start
@@ -175,8 +172,10 @@ export SERVICE_ENDPOINT=http://127.0.0.1:35357/v2.0
 openstack-config --set /etc/keystone/keystone.conf DEFAULT admin_token $SERVICE_TOKEN
 
 #Generate keystone certs
-keystone-manage pki_setup
-chown -R keystone /etc/keystone/ssl/
+if [ "$os_dist" == 'grizzly' ]; then
+  keystone-manage pki_setup
+  chown -R keystone /etc/keystone/ssl/
+fi
 
 # Stop keystone if it is already running (to reload the new admin token)
 service openstack-keystone status >/dev/null 2>&1 &&
