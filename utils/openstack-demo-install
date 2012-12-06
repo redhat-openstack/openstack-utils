@@ -199,11 +199,11 @@ ENABLE_SWIFT=1 openstack-keystone-sample-data
 
 # Change nova configuration to use keystone
 openstack-config --set /etc/nova/nova.conf DEFAULT auth_strategy keystone
-if [ "$os_dist" == 'essex' -o "$os_dist" == 'grizzly' ]; then
+if [ "$os_dist" == 'essex' ]; then
   openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_tenant_name service
   openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_user nova
   openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_password servicepass
-else #folsom
+else #>=folsom
   openstack-config --set /etc/nova/nova.conf keystone_authtoken admin_tenant_name service
   openstack-config --set /etc/nova/nova.conf keystone_authtoken admin_user nova
   openstack-config --set /etc/nova/nova.conf keystone_authtoken admin_password servicepass
@@ -215,11 +215,11 @@ done
 # Change glance configuration to use keystone
 for svc in api registry; do
   openstack-config --set /etc/glance/glance-$svc.conf paste_deploy flavor keystone
-  if [ "$os_dist" == 'essex' -o "$os_dist" == 'grizzly' ]; then
+  if [ "$os_dist" == 'essex' ]; then
     openstack-config --set /etc/glance/glance-$svc-paste.ini filter:authtoken admin_tenant_name service
     openstack-config --set /etc/glance/glance-$svc-paste.ini filter:authtoken admin_user glance
     openstack-config --set /etc/glance/glance-$svc-paste.ini filter:authtoken admin_password servicepass
-  else #folsom
+  else #>=folsom
     openstack-config --set /etc/glance/glance-$svc.conf keystone_authtoken admin_tenant_name service
     openstack-config --set /etc/glance/glance-$svc.conf keystone_authtoken admin_user glance
     openstack-config --set /etc/glance/glance-$svc.conf keystone_authtoken admin_password servicepass
