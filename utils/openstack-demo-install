@@ -117,7 +117,6 @@ if [ "$cinder" ]; then
   # persistent volumes on tgtd startup
   if rpm -q scsi-target-utils | grep -q el6; then
     sed -i '1iinclude /etc/cinder/volumes/*' /etc/tgt/targets.conf
-    service tgtd stop # It's (re)started below
   fi
 fi
 
@@ -132,7 +131,7 @@ service_installed dbus && dbus='dbus' || dbus='messagebus'
 
 echo "======= Enabling the services ======"
 
-for svc in qpidd $dbus libvirtd httpd tgtd; do
+for svc in qpidd $dbus libvirtd httpd; do
     chkconfig $svc on
 done
 for svc in api registry; do
@@ -155,7 +154,7 @@ fi
 
 echo "======= Starting the services ======"
 
-for svc in qpidd $dbus libvirtd httpd tgtd; do
+for svc in qpidd $dbus libvirtd httpd; do
     service $svc start
 done
 for svc in api registry; do
