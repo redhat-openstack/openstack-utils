@@ -32,17 +32,11 @@ echo "======= Installing/Updating packages ======"
 yum install openstack-nova-common -y
 
 #determine which OpenStack version we'll be running
-if rpm -q openstack-nova-common-2012.1.* >/dev/null 2>&1 ||
-   rpm -q openstack-nova-common-2012.1 >/dev/null 2>&1; then
-  os_dist='essex'
-elif rpm -q openstack-nova-common-2012.2.* >/dev/null 2>&1 ||
-     rpm -q openstack-nova-common-2012.2 >/dev/null 2>&1; then
-  os_dist='folsom'
-else
-  os_dist='grizzly'
-fi
-
-echo "About to run $os_dist"
+os_version=$(rpm -q openstack-nova-common --qf='%{VERSION}')
+case $os_version in
+  2012.1|2012.1.*) os_dist='essex';;
+  2012.2|2012.2.*) os_dist='folsom';;
+esac
 
 # Install these first if not on essex
 if [ "$os_dist" != 'essex' ]; then
@@ -61,7 +55,7 @@ yum -y install \
  openstack-utils virt-what \
  -x openstack-swift-plugin-swift3
 
-if [ "$os_dist" == 'grizzly' ]; then
+if [ "$os_dist" != 'essex' ] && [ "$os_dist" != 'folsom' ]; then
   conductor='conductor'
 fi
 
@@ -172,7 +166,7 @@ export SERVICE_ENDPOINT=http://127.0.0.1:35357/v2.0
 openstack-config --set /etc/keystone/keystone.conf DEFAULT admin_token $SERVICE_TOKEN
 
 #Generate keystone certs
-if [ "$os_dist" == 'grizzly' ]; then
+if [ "$os_dist" != 'essex' ] && [ "$os_dist" != 'folsom' ]; then
   keystone-manage pki_setup
   chown -R keystone /etc/keystone/ssl/
 fi
