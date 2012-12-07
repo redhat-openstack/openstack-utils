@@ -46,10 +46,12 @@ fi
 # memcached is needed by swift
 # qpid AMQP broker is needed by most services
 # virtualization capabilities are needed by nova
+# avahi referenced explicitly to avoid https://bugzilla.redhat.com/746111
 yum -y install \
  qpid-cpp-server qpid-cpp-server-daemon \
  @virtualization \
  memcached \
+ avahi \
  openstack-nova openstack-nova-novncproxy \
  openstack-glance openstack-keystone openstack-dashboard \
  openstack-swift\* openstack-quantum \
