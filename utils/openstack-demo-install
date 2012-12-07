@@ -18,6 +18,11 @@
 # under the License.
 #
 
+service_installed() {
+  PAGER= systemctl show $1.service >/dev/null 2>&1 ||
+  chkconfig --list $1 >//dev/null 2>&1
+}
+
 set -e # exit on error. This script is restartable
 
 if [ $(id -u) -ne 0 ]; then
@@ -122,9 +127,12 @@ fi
 # truncate -s20G /var/lib/nova/nova-volumes.img
 # vgcreate nova-volumes $(sudo losetup --show -f /var/lib/nova/nova-volumes.img)
 
+# determine the correct dbus service name
+service_installed dbus && dbus='dbus' || dbus='messagebus'
+
 echo "======= Enabling the services ======"
 
-for svc in qpidd messagebus libvirtd httpd tgtd; do
+for svc in qpidd $dbus libvirtd httpd tgtd; do
     chkconfig $svc on
 done
 for svc in api registry; do
@@ -147,7 +155,7 @@ fi
 
 echo "======= Starting the services ======"
 
-for svc in qpidd messagebus libvirtd httpd tgtd; do
+for svc in qpidd $dbus libvirtd httpd tgtd; do
     service $svc start
 done
 for svc in api registry; do
