@@ -130,6 +130,12 @@ if [ "$cinder" ]; then
   done
 fi
 
+# Disable QPID auth with a warning at the end
+if grep -q '^auth=yes' /etc/qpidd.conf; then
+  sed -i 's/^auth=yes/auth=no/' /etc/qpidd.conf
+  qpid_auth_disabled=1
+fi
+
 echo "======= Starting the services ======"
 
 for svc in qpidd messagebus libvirtd httpd; do
@@ -340,3 +346,7 @@ openstack-status
 
 echo "The OpenStack web interface is running at http://localhost/dashboard"
 echo "(Use User:$OS_USERNAME and Password:$OS_PASSWORD)"
+
+if [ "$qpid_auth_disabled" ]; then
+  echo "Please note that QPID authentication has been disabled in /etc/qpidd.conf"
+fi
