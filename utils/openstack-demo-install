@@ -114,7 +114,7 @@ fi
 
 echo "======= Enabling the services ======"
 
-for svc in qpidd libvirtd httpd; do
+for svc in qpidd messagebus libvirtd httpd; do
     chkconfig $svc on
 done
 for svc in api registry; do
@@ -131,7 +131,7 @@ fi
 
 echo "======= Starting the services ======"
 
-for svc in qpidd libvirtd httpd; do
+for svc in qpidd messagebus libvirtd httpd; do
     service $svc start
 done
 for svc in api registry; do
