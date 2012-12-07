@@ -50,7 +50,8 @@ yum -y install \
  qpid-cpp-server qpid-cpp-server-daemon \
  @virtualization \
  memcached \
- openstack-nova openstack-glance openstack-keystone openstack-dashboard \
+ openstack-nova openstack-nova-novncproxy \
+ openstack-glance openstack-keystone openstack-dashboard \
  openstack-swift\* openstack-quantum \
  openstack-utils virt-what \
  -x openstack-swift-plugin-swift3
@@ -120,7 +121,7 @@ done
 for svc in api registry; do
     chkconfig openstack-glance-$svc on
 done
-for svc in api objectstore compute network scheduler cert $conductor; do
+for svc in api objectstore compute network scheduler cert $conductor consoleauth novncproxy; do
     chkconfig openstack-nova-$svc on
 done
 if [ "$cinder" ]; then
@@ -137,7 +138,7 @@ done
 for svc in api registry; do
     service openstack-glance-$svc start
 done
-for svc in api objectstore compute network scheduler cert $conductor; do
+for svc in api objectstore compute network scheduler cert $conductor consoleauth novncproxy; do
     service openstack-nova-$svc start
 done
 if [ "$cinder" ]; then
