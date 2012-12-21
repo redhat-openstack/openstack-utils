@@ -95,11 +95,19 @@ if virt-what | grep -q .; then
   if [ "$fedora_ver" -ge 16 ]; then
     setsebool -P virt_use_execmem on
   fi
-  # Note if running on RHEL (derivatives) <= 6.3 then
-  # You'll need to issue these commands
-  #  ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-system-x86_64
-  #  service libvirtd restart
+  # Note if running on RHEL (derivatives) <= 6.3 or
+  # specifically libvirt < 0.9.13-66 then we need to
+  # do this to support starting nested VMs. See:
   # See https://bugzilla.redhat.com/show_bug.cgi?id=813735
+  # A local libvirt version check is fine here since this script
+  # only considers installing everything on the local node.
+  if python -c 'import libvirt, sys; sys.exit(not libvirt.getVersion() <= 9013)'; then
+    [ "$(uname -m)" = 'x86_64' ] && qemu_cmd=qemu-system-x86_64 || qemu_cmd=qemu-system-i386
+    if [ -e /usr/libexec/qemu-kvm ]; then # present on RHEL
+      ln -s /usr/libexec/qemu-kvm /usr/bin/$qemu_cmd
+      service libvirtd stop # (re)started below
+    fi
+  fi
 fi
 
 # Allow httpd (horizon) to connect to other services
