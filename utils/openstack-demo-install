@@ -30,6 +30,10 @@ if [ $(id -u) -ne 0 ]; then
   exit 1
 fi
 
+CONTROLLER_PUBLIC_ADDRESS=${CONTROLLER_PUBLIC_ADDRESS:-localhost}
+CONTROLLER_INTERNAL_ADDRESS=${CONTROLLER_INTERNAL_ADDRESS:-localhost}
+CONTROLLER_ADMIN_ADDRESS=${CONTROLLER_ADMIN_ADDRESS:-localhost}
+SWIFT_RING_IP=${SWIFT_RING_IP:-127.0.0.1}
 
 echo "======= Installing/Updating packages ======"
 
@@ -184,12 +188,12 @@ cat > ~/keystonerc <<EOF
 export OS_USERNAME=admin
 export OS_PASSWORD=verybadpass
 export OS_TENANT_NAME=admin
-export OS_AUTH_URL=http://127.0.0.1:5000/v2.0/
+export OS_AUTH_URL=http://$CONTROLLER_ADMIN_ADDRESS:5000/v2.0/
 EOF
 
 # Service token is needed to bootstrap keystone commands
 export SERVICE_TOKEN=$(openssl rand -hex 10)
-export SERVICE_ENDPOINT=http://127.0.0.1:35357/v2.0
+export SERVICE_ENDPOINT=http://$CONTROLLER_ADMIN_ADDRESS:35357/v2.0
 
 . ~/keystonerc
 
@@ -220,6 +224,9 @@ done
 
 # Create sample Tenants, Users and Roles
 ADMIN_PASSWORD=$OS_PASSWORD SERVICE_PASSWORD=servicepass \
+CONTROLLER_ADMIN_ADDRESS=$CONTROLLER_ADMIN_ADDRESS \
+CONTROLLER_PUBLIC_ADDRESS=$CONTROLLER_PUBLIC_ADDRESS \
+CONTROLLER_INTERNAL_ADDRESS=$CONTROLLER_INTERNAL_ADDRESS \
 ENABLE_SWIFT=1 openstack-keystone-sample-data
 
 # Change nova configuration to use keystone
@@ -260,7 +267,6 @@ cinder_keystone_sample_data()
 
   get_id () { echo $("$@" | grep ' id ' | awk '{print $4}'); }
   ADMIN_PASSWORD=$OS_PASSWORD
-  SERVICE_HOST=127.0.0.1
   SERVICE_PASSWORD=servicepass
   SERVICE_TENANT=$(keystone tenant-list | grep service | awk '{print $2}')
   ADMIN_ROLE=$(keystone role-list | grep ' admin ' | awk '{print $2}')
@@ -279,9 +285,9 @@ cinder_keystone_sample_data()
   keystone endpoint-create \
       --region RegionOne \
       --service_id $CINDER_SERVICE \
-      --publicurl "http://$SERVICE_HOST:8776/v1/\$(tenant_id)s" \
-      --adminurl "http://$SERVICE_HOST:8776/v1/\$(tenant_id)s" \
-      --internalurl "http://$SERVICE_HOST:8776/v1/\$(tenant_id)s"
+      --publicurl "http://$CONTROLLER_PUBLIC_ADDRESS:8776/v1/\$(tenant_id)s" \
+      --adminurl "http://$CONTROLLER_ADMIN_ADDRESS:8776/v1/\$(tenant_id)s" \
+      --internalurl "http://$CONTROLLER_INTERNAL_ADDRESS:8776/v1/\$(tenant_id)s"
 }
 
 # Change cinder configuration to use keystone
@@ -308,9 +314,9 @@ swift_keystone_sample_data()
   # Add the swift endpoint
   SWIFTSERIVEID=$(keystone service-list | grep object-store | awk '{print $2}')
   keystone endpoint-create --service_id $SWIFTSERIVEID \
-                           --publicurl   'http://127.0.0.1:8080/v1/AUTH_$(tenant_id)s' \
-                           --adminurl    'http://127.0.0.1:8080/v1/AUTH_$(tenant_id)s' \
-                           --internalurl 'http://127.0.0.1:8080/v1/AUTH_$(tenant_id)s'
+                           --publicurl   "http://$CONTROLLER_PUBLIC_ADDRESS:8080/v1/AUTH_\$(tenant_id)s" \
+                           --adminurl    "http://$CONTROLLER_ADMIN_ADDRESS:8080/v1/AUTH_\$(tenant_id)s" \
+                           --internalurl "http://$CONTROLLER_INTERNAL_ADDRESS:8080/v1/AUTH_\$(tenant_id)s"
 }
 
 setup_swift()
@@ -335,9 +341,9 @@ setup_swift()
     mkfs.ext4 -I 1024 $DEVICE
     mkdir -p /srv/node/device$zone
     mount -o noatime,nodiratime,nobarrier,user_xattr $DEVICE /srv/node/device$zone
-    swift-ring-builder /etc/swift/account.builder add z$zone-127.0.0.1:6002/device$zone 100
-    swift-ring-builder /etc/swift/container.builder add z$zone-127.0.0.1:6001/device$zone 100
-    swift-ring-builder /etc/swift/object.builder add z$zone-127.0.0.1:6000/device$zone 100
+    swift-ring-builder /etc/swift/account.builder add z$zone-$SWIFT_RING_IP:6002/device$zone 100
+    swift-ring-builder /etc/swift/container.builder add z$zone-$SWIFT_RING_IP:6001/device$zone 100
+    swift-ring-builder /etc/swift/object.builder add z$zone-$SWIFT_RING_IP:6000/device$zone 100
   done
   swift-ring-builder /etc/swift/account.builder rebalance
   swift-ring-builder /etc/swift/container.builder rebalance
@@ -368,7 +374,7 @@ setup_swift()
 echo "======= Running openstack-status ======"
 openstack-status
 
-echo "The OpenStack web interface is running at http://localhost/dashboard"
+echo "The OpenStack web interface is running at http://$CONTROLLER_ADMIN_ADDRESS/dashboard"
 echo "(Use User:$OS_USERNAME and Password:$OS_PASSWORD)"
 
 if [ "$qpid_auth_disabled" ]; then
