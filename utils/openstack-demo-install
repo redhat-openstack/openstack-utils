@@ -137,9 +137,13 @@ fi
 # determine the correct dbus service name
 service_installed dbus && dbus='dbus' || dbus='messagebus'
 
+# Ensure cgroup is started so that libvirt does an SELinux relabel
+# for VM disk images.  Avoids a bug on some versions of libvirtd on RHEL 6.4
+service_installed cgroup && cgroup='cgroup'
+
 echo "======= Enabling the services ======"
 
-for svc in qpidd $dbus libvirtd httpd; do
+for svc in qpidd $cgroup $dbus libvirtd httpd; do
     chkconfig $svc on
 done
 for svc in api registry; do
@@ -162,7 +166,7 @@ fi
 
 echo "======= Starting the services ======"
 
-for svc in qpidd $dbus libvirtd httpd; do
+for svc in qpidd $cgroup $dbus libvirtd httpd; do
     service $svc start
 done
 for svc in api registry; do
