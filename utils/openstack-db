@@ -250,7 +250,7 @@ if [ "$MODE" = 'init' ]; then
   fi
 
   # Ask openstack-$APP to sync the db.
-  echo "Asking openstack-$APP to sync the database."
+  echo "Initializing the $APP database, please wait..."
   if [ "${APP}" = "nova" ] || [ "${APP}" = "cinder" ]; then
     db_sync='db sync'
   else
