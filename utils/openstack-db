@@ -216,6 +216,17 @@ if ! echo "SELECT 1;" | mysql -u root ${MYSQL_ROOT_PW_ARG} > /dev/null; then
 fi
 echo "Verified connectivity to MySQL."
 
+# Sanity check that there are no existing users
+
+if [ "$MODE" = 'init' ]; then
+  users=$(echo "SELECT COUNT(*) FROM mysql.user WHERE User = '$APP';" |
+          mysql -u root ${MYSQL_ROOT_PW_ARG} | tail -n+2)
+  if [ "$users" != 0 ]; then
+    echo "User '$APP' already exists. Please consider first running:" >&2
+    echo "$0 --drop --service $APP" >&2
+    exit 1
+  fi
+fi
 
 # Create or Drop the db.
 
