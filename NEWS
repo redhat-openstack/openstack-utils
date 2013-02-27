@@ -1,3 +1,11 @@
+2013.1-2 27-02-2013
+  openstack-demo-install:
+    avoid libvirt SELinux bug on RHEL 6.4
+    avoid libvirt nested VM issue on RHEL <= 6.3
+  openstack-db
+    support updating mysql password in newer conf files
+    prompt users on how to clear a partially installed db
+
 2013.1-1 07-12-2012
   openstack-demo-install:
     support grizzly
