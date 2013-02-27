@@ -246,7 +246,7 @@ if [ "$MODE" = 'init' ]; then
   # Make sure $APP configuration has the right MySQL password.
   if [ "${MYSQL_APP_PW}" != "${MYSQL_APP_PW_DEFAULT}" ]; then
     echo "Updating '$APP' database password in ${APP_CONFIG}"
-    sed -i -e "s/mysql:\/\/$APP:\(.*\)@/mysql:\/\/$APP:${MYSQL_APP_PW}@/" ${APP_CONFIG}
+    sed -i -e "s|^#* *\(sql_connection *= *mysql://$APP\):.*@|\1:${MYSQL_APP_PW}@|" ${APP_CONFIG}
   fi
 
   # Ask openstack-$APP to sync the db.
