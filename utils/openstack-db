@@ -216,9 +216,16 @@ if ! echo "SELECT 1;" | mysql -u root ${MYSQL_ROOT_PW_ARG} > /dev/null; then
 fi
 echo "Verified connectivity to MySQL."
 
-# Sanity check that there are no existing users
+# Sanity check that there are no existing db or users
 
 if [ "$MODE" = 'init' ]; then
+  dbs=$(echo "SELECT COUNT(*) FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME='$APP';" |
+        mysql -u root ${MYSQL_ROOT_PW_ARG} | tail -n+2)
+  if [ "$dbs" != 0 ]; then
+    echo "Database '$APP' already exists. Please consider first running:" >&2
+    echo "$0 --drop --service $APP" >&2
+    exit 1
+  fi
   users=$(echo "SELECT COUNT(*) FROM mysql.user WHERE User = '$APP';" |
           mysql -u root ${MYSQL_ROOT_PW_ARG} | tail -n+2)
   if [ "$users" != 0 ]; then
@@ -243,9 +250,11 @@ EOF
 else
   echo "Dropping '$APP' database." >&2
 cat << EOF
+GRANT USAGE ON *.* TO '$APP'@'localhost';
+GRANT USAGE ON *.* TO '$APP'@'%';
 DROP USER '$APP'@'localhost';
 DROP USER '$APP'@'%';
-DROP DATABASE $APP;
+DROP DATABASE IF EXISTS $APP;
 flush privileges;
 EOF
 fi |
