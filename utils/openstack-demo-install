@@ -92,7 +92,7 @@ if virt-what | grep -q .; then
   openstack-config --set /etc/nova/nova.conf DEFAULT libvirt_type qemu
   # Workaround (https://bugzilla.redhat.com/show_bug.cgi?id=858216)
   openstack-config --set /etc/nova/nova.conf DEFAULT libvirt_cpu_mode none
-  if [ "$fedora_ver" -ge 16 ]; then
+  if [ "$fedora_ver" -ge 16 ] && selinuxenabled; then
     setsebool -P virt_use_execmem on
   fi
   # Note if running on RHEL (derivatives) <= 6.3 or
@@ -111,7 +111,7 @@ if virt-what | grep -q .; then
 fi
 
 # Allow httpd (horizon) to connect to other services
-setsebool -P httpd_can_network_connect=on
+selinuxenabled && setsebool -P httpd_can_network_connect=on
 service httpd restart
 
 # Configure cinder with nova and keystone if installed
