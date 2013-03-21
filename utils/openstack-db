@@ -249,11 +249,13 @@ flush privileges;
 EOF
 else
   echo "Dropping '$APP' database." >&2
+drop_users=$(
+ echo "SELECT User,Host FROM mysql.user WHERE User = '$APP';" |
+ mysql -u root ${MYSQL_ROOT_PW_ARG} |
+ sed -n "s/\($APP\)[\t ]*\(.*\)/DROP USER '\1'@'\2';/p"
+)
 cat << EOF
-GRANT USAGE ON *.* TO '$APP'@'localhost';
-GRANT USAGE ON *.* TO '$APP'@'%';
-DROP USER '$APP'@'localhost';
-DROP USER '$APP'@'%';
+$drop_users
 DROP DATABASE IF EXISTS $APP;
 flush privileges;
 EOF
