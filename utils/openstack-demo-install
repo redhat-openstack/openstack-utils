@@ -41,6 +41,7 @@ os_version=$(rpm -q openstack-nova-common --qf='%{VERSION}')
 case $os_version in
   2012.1|2012.1.*) os_dist='essex';;
   2012.2|2012.2.*) os_dist='folsom';;
+  2013.1|2013.1.*) os_dist='grizzly';;
 esac
 
 # Install these first if not on essex
@@ -186,8 +187,8 @@ echo "======= Setting up Keystone ======"
 # Set up a keystonerc file with admin password
 cat > ~/keystonerc <<EOF
 export OS_USERNAME=admin
-export OS_PASSWORD=verybadpass
-export OS_TENANT_NAME=admin
+export OS_PASSWORD=secrete
+export OS_TENANT_NAME=demo
 export OS_AUTH_URL=http://127.0.0.1:5000/v2.0/
 EOF
 
@@ -223,6 +224,8 @@ until keystone user-list >/dev/null 2>&1; do
 done
 
 # Create sample Tenants, Users and Roles
+# NB in Grizzly sample_data.sh *_PASSWORD are ignored:
+# https://github.com/openstack/keystone/commit/d6f7cbc484868bdec3eeb9d4b0f45b10ce536e79
 ADMIN_PASSWORD=$OS_PASSWORD SERVICE_PASSWORD=servicepass \
 ENABLE_SWIFT=1 openstack-keystone-sample-data
 
@@ -235,7 +238,11 @@ if [ "$os_dist" == 'essex' ]; then
 else #>=folsom
   openstack-config --set /etc/nova/nova.conf keystone_authtoken admin_tenant_name service
   openstack-config --set /etc/nova/nova.conf keystone_authtoken admin_user nova
-  openstack-config --set /etc/nova/nova.conf keystone_authtoken admin_password servicepass
+  if [ "$os_dist" == 'folsom' ]; then
+    openstack-config --set /etc/nova/nova.conf keystone_authtoken admin_password servicepass
+  else #>=grizzly
+    openstack-config --set /etc/nova/nova.conf keystone_authtoken admin_password nova
+  fi
 fi
 for svc in api compute; do
     service openstack-nova-$svc restart
@@ -251,7 +258,11 @@ for svc in api registry; do
   else #>=folsom
     openstack-config --set /etc/glance/glance-$svc.conf keystone_authtoken admin_tenant_name service
     openstack-config --set /etc/glance/glance-$svc.conf keystone_authtoken admin_user glance
-    openstack-config --set /etc/glance/glance-$svc.conf keystone_authtoken admin_password servicepass
+    if [ "$os_dist" == 'folsom' ]; then
+      openstack-config --set /etc/glance/glance-$svc.conf keystone_authtoken admin_password servicepass
+    else #>=grizzly
+      openstack-config --set /etc/glance/glance-$svc.conf keystone_authtoken admin_password glance
+    fi
   fi
 done
 for svc in api registry; do
@@ -313,7 +324,7 @@ swift_keystone_sample_data()
   SWIFTSERIVEID=$(keystone service-list | grep object-store | awk '{print $2}')
   keystone endpoint-create --service_id $SWIFTSERIVEID \
                            --publicurl   'http://127.0.0.1:8080/v1/AUTH_$(tenant_id)s' \
-                           --adminurl    'http://127.0.0.1:8080/v1/AUTH_$(tenant_id)s' \
+                           --adminurl    'http://127.0.0.1:8080/v1' \
                            --internalurl 'http://127.0.0.1:8080/v1/AUTH_$(tenant_id)s'
 }
 
@@ -324,7 +335,11 @@ setup_swift()
   # edit default config
   openstack-config --set /etc/swift/proxy-server.conf filter:authtoken admin_tenant_name service
   openstack-config --set /etc/swift/proxy-server.conf filter:authtoken admin_user swift
-  openstack-config --set /etc/swift/proxy-server.conf filter:authtoken admin_password servicepass
+  if [ "$os_dist" == 'folsom' ]; then
+    openstack-config --set /etc/swift/proxy-server.conf filter:authtoken admin_password servicepass
+  else #>=grizzly
+    openstack-config --set /etc/swift/proxy-server.conf filter:authtoken admin_password swiftpass
+  fi
   openstack-config --set /etc/swift/swift.conf swift-hash swift_hash_path_suffix $(openssl rand -hex 10)
 
   swift_keystone_sample_data
