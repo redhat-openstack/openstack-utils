@@ -140,7 +140,7 @@ service_installed dbus && dbus='dbus' || dbus='messagebus'
 
 # Ensure cgroup is started so that libvirt does an SELinux relabel
 # for VM disk images.  Avoids a bug on some versions of libvirtd on RHEL 6.4
-service_installed cgroup && cgroup='cgroup'
+chkconfig --list $1 >//dev/null 2>&1 'cgconfig' && cgroup='cgconfig'
 
 echo "======= Enabling the services ======"
 
