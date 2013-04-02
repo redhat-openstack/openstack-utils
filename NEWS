@@ -1,4 +1,4 @@
-2013.1-4 02-04-2013
+2013.1-5 02-04-2013
   openstack-demo-install:
     support systems with selinux disabled
     support adjusted keystone sample credentials in grizzly
@@ -6,6 +6,7 @@
   openstack-db
     fix setting of keystone mysql password broken in 2013.1-2
     provide more robust clearing of mysql users in --drop
+    fix handling of mariadb
 
 2013.1-2 27-02-2013
   openstack-demo-install:
