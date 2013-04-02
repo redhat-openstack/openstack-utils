@@ -1,7 +1,8 @@
-2013.1-3 02-04-2013
+2013.1-4 02-04-2013
   openstack-demo-install:
     support systems with selinux disabled
     support adjusted keystone sample credentials in grizzly
+    fix cgroup service handling
   openstack-db
     fix setting of keystone mysql password broken in 2013.1-2
     provide more robust clearing of mysql users in --drop
