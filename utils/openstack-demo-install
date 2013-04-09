@@ -365,6 +365,9 @@ setup_swift()
   # Make sure swift owns the ring file
   chown -R swift:swift /etc/swift/*gz /srv/node
 
+  # Make sure swift owns the keystone signing dir
+  mkdir -p /tmp/keystone-signing-swift && chown swift: /tmp/keystone-signing-swift
+
   # Start the services
   service memcached start
   chkconfig memcached on
