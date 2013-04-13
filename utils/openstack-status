@@ -26,7 +26,7 @@ for conf in nova/nova.conf keystone/keystone.conf glance/glance-registry.conf; d
     fi
 done
 
-rpm -q openstack-nova > /dev/null && nova='nova'
+rpm -q openstack-nova-common > /dev/null && nova='nova'
 rpm -q openstack-glance > /dev/null && glance='glance'
 rpm -q openstack-dashboard > /dev/null && dashboard='httpd'
 rpm -q openstack-keystone > /dev/null && keystone='keystone'
