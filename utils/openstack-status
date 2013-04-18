@@ -66,11 +66,21 @@ if service_enabled openstack-nova-volume 2>/dev/null ||
   tgtd='tgtd'
 fi
 
+lsb_to_string() {
+  case $1 in
+  0) echo "active" ;;
+  1) echo "dead" ;;
+  2) echo "dead" ;;
+  3) echo "inactive" ;;
+  *) echo "unknown" ;;
+  esac
+}
+
 check_sysv_svc() {
 
   printf '%-30s' "$1:"
   bootstatus=$(service_enabled $1 && echo enabled || echo disabled)
-  status=$(service $1 status >/dev/null 2>/dev/null && echo active || echo inactive)
+  status=$(service $1 status >/dev/null 2>/dev/null ; lsb_to_string $?)
   if [ "$bootstatus" = 'disabled' ]; then
     bootstatus=' (disabled on boot)'
   else
