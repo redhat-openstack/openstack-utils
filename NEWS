@@ -1,3 +1,10 @@
+2013.1-7 24-04-2013
+  openstack-demo-install:
+    fix swift init loop in grizzly
+  openstack-status
+    fix detection of nova install
+    improve reporting of service status
+
 2013.1-5 02-04-2013
   openstack-demo-install:
     support systems with selinux disabled
