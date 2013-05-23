@@ -1,3 +1,7 @@
+2013.1-8 23-05-2013
+  openstack-status:
+    print out all quantum services and update for grizzly
+
 2013.1-7 24-04-2013
   openstack-demo-install:
     fix swift init loop in grizzly
