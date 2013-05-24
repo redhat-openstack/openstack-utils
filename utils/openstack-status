@@ -137,15 +137,7 @@ fi
 
 if test "$quantum"; then
   printf "== Quantum services ==\n"
-  # TODO: Update for Folsom which has plugin ini files in a different location
-  if grep -q '^provider = quantum.plugins.linuxbridge' /etc/quantum/plugins.ini 2>/dev/null; then
-    quantum_plugin=quantum-linuxbridge-agent
-  fi
-  if grep -q '^provider = quantum.plugins.openvswitch' /etc/quantum/plugins.ini 2>/dev/null; then
-    quantum_plugin=quantum-openvswitch-agent
-    quantum_support=openvswitch
-  fi
-  for svc in quantum-server $quantum_plugin $quantum_support; do check_svc "$svc"; done
+  for svc in quantum-server quantum-dhcp-agent quantum-l3-agent quantum-linuxbridge-agent quantum-openvswitch-agent openvswitch; do check_svc "$svc"; done
 fi
 
 if test "$swift"; then
