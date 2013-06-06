@@ -162,7 +162,7 @@ if test "$cinder"; then
 fi
 
 printf "== Support services ==\n"
-for svc in $mysqld $dashboard $libvirtd $tgtd $qpidd $rabbitmq $memcached; do
+for svc in $mysqld $libvirtd $tgtd $qpidd $rabbitmq $memcached; do
   check_svc "$svc"
 done
 
