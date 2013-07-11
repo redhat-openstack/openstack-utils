@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/bin/sh
 #
 # Copyright (C) 2012, Red Hat, Inc.
 # Alan Pevec <apevec@redhat.com>
@@ -16,48 +16,6 @@
 # under the License.
 #
 
-import iniparse
-import sys
+# This functionality is now implemented in the more general crudini
 
-parameter = value = None
-
-def usage():
-    sys.stderr.write(sys.argv[0] +
-                     " --set|--del config_file section [parameter] [value]\n")
-    sys.exit(1)
-
-try:
-    mode = sys.argv[1]
-    if mode not in ('--set', '--del'):
-        usage()
-    cfgfile = sys.argv[2]
-    section = sys.argv[3]
-    try:
-        parameter = sys.argv[4]
-        value = sys.argv[5]
-    except IndexError:
-        if mode == '--set':
-            usage()
-    else:
-        if mode == '--del':
-            sys.stderr.write("A value should not be specified with --del\n")
-            usage()
-except IndexError:
-    usage()
-
-conf = iniparse.ConfigParser()
-conf.readfp(open(cfgfile))
-
-if mode == '--set':
-    if not conf.has_section(section):
-        conf.add_section(section)
-        value += '\n'
-    conf.set(section, parameter, value)
-else:
-    if parameter is None:
-        conf.remove_section(section)
-    elif value is None:
-        conf.remove_option(section, parameter)
-
-with open(cfgfile, 'w') as f:
-    conf.write(f)
+exec crudini "$@"
