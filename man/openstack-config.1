@@ -3,7 +3,7 @@
 openstack-config - Manipulate the OpenStack ini files
 .SH SYNOPSIS
 .B openstack-config
-\fI--set|--del config_file section \fR[parameter] [value]
+\fI--set|--get|--del config_file section \fR[parameter] [value]
 .SH DESCRIPTION
 Provide functionality to add/edit/delete items and
 sections in the OpenStack ini format config files.
@@ -12,6 +12,10 @@ sections in the OpenStack ini format config files.
 \fB\-\-set\fR
 .IP
 Add/Edit the specified parameter
+.HP
+\fB\-\-get\fR
+.IP
+Display the specified parameter
 .HP
 \fB\-\-del\fR
 .IP
