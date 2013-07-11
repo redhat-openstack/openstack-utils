@@ -64,7 +64,11 @@ elif mode == '--del':
         conf.remove_option(section, parameter)
 
 elif mode == '--get':
-    print conf.get(section, parameter)
+    if parameter is None:
+        for o in conf.options(section):
+            print "%s=%s" % (o, conf.get(section, o))
+    else:
+        print conf.get(section, parameter)
     sys.exit(0)
 
 with open(cfgfile, 'w') as f:
