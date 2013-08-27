@@ -31,6 +31,7 @@ rpm -q openstack-glance > /dev/null && glance='glance'
 rpm -q openstack-dashboard > /dev/null && dashboard='httpd'
 rpm -q openstack-keystone > /dev/null && keystone='keystone'
 rpm -q openstack-quantum > /dev/null && quantum='quantum'
+rpm -q openstack-neutron > /dev/null && neutron='neutron'
 rpm -q openstack-swift > /dev/null && swift='swift'
 rpm -q openstack-cinder > /dev/null && cinder='cinder'
 rpm -q libvirt > /dev/null && libvirtd='libvirtd'
@@ -138,6 +139,11 @@ fi
 if test "$quantum"; then
   printf "== Quantum services ==\n"
   for svc in quantum-server quantum-dhcp-agent quantum-l3-agent quantum-linuxbridge-agent quantum-openvswitch-agent openvswitch; do check_svc "$svc"; done
+fi
+
+if test "$neutron"; then
+  printf "== Neutron services ==\n"
+  for svc in neutron-server neutron-dhcp-agent neutron-l3-agent neutron-linuxbridge-agent neutron-openvswitch-agent openvswitch; do check_svc "$svc"; done
 fi
 
 if test "$swift"; then
