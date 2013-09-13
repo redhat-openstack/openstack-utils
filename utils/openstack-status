@@ -34,6 +34,7 @@ rpm -q openstack-neutron > /dev/null && neutron='neutron' ||
 { rpm -q openstack-quantum > /dev/null && neutron='quantum'; }
 rpm -q openstack-swift > /dev/null && swift='swift'
 rpm -q openstack-cinder > /dev/null && cinder='cinder'
+rpm -q openstack-ceilometer-common > /dev/null && ceilometer='ceilometer'
 rpm -q libvirt > /dev/null && libvirtd='libvirtd'
 rpm -q qpid-cpp-server > /dev/null && qpidd='qpidd'
 rpm -q rabbitmq-server > /dev/null && rabbitmq='rabbitmq-server'
@@ -162,6 +163,13 @@ if test "$cinder"; then
   printf "== Cinder services ==\n"
   for service in api scheduler volume; do
     check_svc openstack-cinder-$service
+  done
+fi
+
+if test "$ceilometer"; then
+  printf "== Ceilometer services ==\n"
+  for service in api central compute collector; do
+    check_svc openstack-ceilometer-$service
   done
 fi
 

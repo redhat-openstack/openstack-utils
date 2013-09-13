@@ -3,6 +3,7 @@
     don't print httpd status which is problematic on RHEL 6
     print neutron services status when installed
     print dbus service status
+    print ceilometer services status when installed
 
 2013.1-8 23-05-2013
   openstack-status:
