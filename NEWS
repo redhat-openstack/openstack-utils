@@ -4,6 +4,7 @@
     print neutron services status when installed
     print dbus service status
     print ceilometer services status when installed
+    print heat services status when installed
 
 2013.1-8 23-05-2013
   openstack-status:

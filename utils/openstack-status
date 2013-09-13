@@ -35,6 +35,7 @@ rpm -q openstack-neutron > /dev/null && neutron='neutron' ||
 rpm -q openstack-swift > /dev/null && swift='swift'
 rpm -q openstack-cinder > /dev/null && cinder='cinder'
 rpm -q openstack-ceilometer-common > /dev/null && ceilometer='ceilometer'
+rpm -q openstack-heat-common > /dev/null && heat='heat'
 rpm -q libvirt > /dev/null && libvirtd='libvirtd'
 rpm -q qpid-cpp-server > /dev/null && qpidd='qpidd'
 rpm -q rabbitmq-server > /dev/null && rabbitmq='rabbitmq-server'
@@ -170,6 +171,13 @@ if test "$ceilometer"; then
   printf "== Ceilometer services ==\n"
   for service in api central compute collector; do
     check_svc openstack-ceilometer-$service
+  done
+fi
+
+if test "$heat"; then
+  printf "== Heat services ==\n"
+  for service in api api-cfn api-cloudwatch engine; do
+    check_svc openstack-heat-$service
   done
 fi
 
