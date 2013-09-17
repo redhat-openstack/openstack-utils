@@ -37,6 +37,7 @@ rpm -q openstack-cinder > /dev/null && cinder='cinder'
 rpm -q openstack-ceilometer-common > /dev/null && ceilometer='ceilometer'
 rpm -q openstack-heat-common > /dev/null && heat='heat'
 rpm -q libvirt > /dev/null && libvirtd='libvirtd'
+rpm -q openvswitch > /dev/null && openvswitch='openvswitch'
 rpm -q qpid-cpp-server > /dev/null && qpidd='qpidd'
 rpm -q rabbitmq-server > /dev/null && rabbitmq='rabbitmq-server'
 rpm -q memcached > /dev/null && memcached='memcached'
@@ -143,7 +144,17 @@ fi
 
 if test "$neutron"; then
   printf "== $neutron services ==\n"
-  for svc in $neutron-server $neutron-dhcp-agent $neutron-l3-agent $neutron-linuxbridge-agent $neutron-openvswitch-agent openvswitch; do check_svc "$svc"; done
+  for svc in $neutron-server; do check_svc "$svc"; done
+  # Default agents
+  for agent in dhcp l3 metadata lbaas; do
+    service_installed $neutron-$agent-agent &&
+    check_svc "$neutron-$agent-agent"
+  done
+  # Optional agents
+  for agent in openvswitch linuxbridge ryu nec mlnx; do
+    service_installed $neutron-$agent-agent &&
+    check_svc "$neutron-$agent-agent"
+  done
 fi
 
 if test "$swift"; then
@@ -182,7 +193,7 @@ if test "$heat"; then
 fi
 
 printf "== Support services ==\n"
-for svc in $mysqld $libvirtd $dbus $tgtd $qpidd $rabbitmq $memcached; do
+for svc in $mysqld $libvirtd $openvswitch $dbus $tgtd $qpidd $rabbitmq $memcached; do
   check_svc "$svc"
 done
 
