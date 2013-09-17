@@ -1,4 +1,4 @@
-2013.?-? ??-??-????
+2013.2-1 17-09-2013
   openstack-status:
     don't print httpd status which is problematic on RHEL 6
     print neutron services status when installed

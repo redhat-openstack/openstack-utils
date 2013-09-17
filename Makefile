@@ -1,6 +1,6 @@
 name = openstack-utils
-version = 2013.1
-release = 8
+version = 2013.2
+release = 1
 
 all:
 	mkdir ${name}-${version}-${release}
