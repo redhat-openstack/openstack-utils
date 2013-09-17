@@ -119,6 +119,27 @@ else
 fi
 
 
+# Make sure a DB reset to mysql is OK
+
+if ! grep -q '^#* *\(sql_\)*connection *= *mysql://' ${APP_CONFIG}; then
+  # If 'mysql' isn't mentioned in comment or setting
+  if [ -z "${ASSUME_YES}" ]; then
+    printf "$APP default DB is not mysql. Would you like to reset to mysql now? (y/n): "
+    read response
+    case "$response" in
+      y|Y)
+        ;;
+      n|N)
+        echo "Aborting."
+        exit 0
+        ;;
+      *)
+        echo "Invalid response." >&2
+        exit 1
+    esac
+  fi
+fi
+
 # Make sure MySQL is installed.
 
 NEW_MYSQL_INSTALL=0
