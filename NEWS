@@ -1,3 +1,7 @@
+2013.2-? ??-??-????
+  openstack-status:
+    print ceilometer alarm services status
+
 2013.2-1 17-09-2013
   openstack-status:
     don't print httpd status which is problematic on RHEL 6
