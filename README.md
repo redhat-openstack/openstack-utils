@@ -7,7 +7,7 @@ traditional SysVinit and newer systemd based distributions.
 
 To get a list of all OpenStack services enabled on the local host:
 
-    # osctl list
+    # openstack-service list
     openstack-ceilometer-api
     openstack-ceilometer-central
     openstack-ceilometer-collector
@@ -27,14 +27,14 @@ To get a list of all OpenStack services enabled on the local host:
 
 To get the status of the Cinder services:
 
-    # osctl status cinder
+    # openstack-service status cinder
     openstack-cinder-api (pid  11644) is running...
     openstack-cinder-scheduler (pid  11790) is running...
     openstack-cinder-volume (pid  11712) is running...
 
 To stop the Cinder and Glance services:
 
-    # osctl stop cinder glance
+    # openstack-service stop cinder glance
     Stopping openstack-cinder-api: [  OK  ]
     Stopping openstack-cinder-scheduler: [  OK  ]
     Stopping openstack-cinder-volume: [  OK  ]
@@ -43,7 +43,7 @@ To stop the Cinder and Glance services:
 
 To start everything:
 
-    # sh osctl start
+    # sh openstack-service start
     Starting openstack-cinder-api: [  OK  ]
     Starting openstack-cinder-scheduler: [  OK  ]
     Starting openstack-cinder-volume: [  OK  ]
