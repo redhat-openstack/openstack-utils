@@ -22,9 +22,14 @@ systemctl --version >/dev/null 2>&1 && systemctl=1
 # This generates a list of all services currently enabled on the host
 # (for certain values of "enabled" where systemd is concerned -- currently,
 # we check multi-user.target.wants for a list of enabled services).
+#
+# The systemctl command used here comes mostly from:
+# http://fedoraproject.org/wiki/SysVinit_to_Systemd_Cheatsheet
 enabled_services() {
 	if [ "$systemctl" = 1 ]; then
-		ls /etc/systemd/system/multi-user.target.wants/ | sed 's/.service$//'
+		systemctl list-unit-files --type=service --full --no-legend --no-pager |
+			awk '$2 == "enabled" {print $1}'| 
+			sed 's/.service$//'
 	else
 		chkconfig --list | grep "${RUNLEVEL}:on" | awk '{print $1}'
 	fi
@@ -59,6 +64,9 @@ generate_service_list() {
 action=$1
 shift
 
+# Generate a list of services and either print the list on stdout for "list"
+# or use the "service" command to perform the requested action on each of
+# the services.
 generate_service_list "$@" |
 ( [ "${action:-list}" = "list" ] && cat || xargs -iSVC service SVC $action )
 
