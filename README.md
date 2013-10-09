@@ -2,7 +2,8 @@ What's all this, then?
 ======================
 
 This is a convenience wrapper for interacting with OpenStack services
-on RHEL 6.x (and derivatives).
+on RHEL and Fedora (and derivatives).  It should work with both
+traditional SysVinit and newer systemd based distributions.
 
 To get a list of all OpenStack services enabled on the local host:
 
