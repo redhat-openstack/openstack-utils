@@ -43,7 +43,7 @@ To stop the Cinder and Glance services:
 
 To start everything:
 
-    # sh openstack-service start
+    # openstack-service start
     Starting openstack-cinder-api: [  OK  ]
     Starting openstack-cinder-scheduler: [  OK  ]
     Starting openstack-cinder-volume: [  OK  ]
