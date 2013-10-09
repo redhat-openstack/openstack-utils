@@ -1,0 +1,37 @@
+#!/bin/sh
+
+systemctl --version >/dev/null 2>&1 && systemctl=1
+[ "$systemctl" ] || RUNLEVEL=$(LANG=C who -r | sed 's/.*run-level \([0-9]\).*/\1/')
+
+enabled_services() {
+	if [ "$systemctl" = 1 ]; then
+		ls /etc/systemd/system/multi-user.target.wants/ | sed 's/.service$//'
+	else
+		chkconfig --list | grep "${RUNLEVEL}:on" | awk '{print $1}'
+	fi
+}
+
+enabled_openstack_services() {
+	local svcprefix=$1
+
+	enabled_services |
+		egrep '^(openstack|neutron|quantum)' |
+		( [ "$svcprefix" ] && egrep "^(openstack-)?${svcprefix}" || cat )
+}
+
+generate_service_list() {
+	if [ "$*" ]; then
+		for svcprefix in "$@"; do
+			enabled_openstack_services $svcprefix
+		done 
+	else
+		enabled_openstack_services
+	fi
+}
+
+action=$1
+shift
+
+generate_service_list "$@" |
+( [ "${action:-list}" = "list" ] && cat || xargs -iSVC service SVC $action )
+
