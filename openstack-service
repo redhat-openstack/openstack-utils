@@ -42,7 +42,7 @@ enabled_openstack_services() {
 	local svcprefix=$1
 
 	enabled_services |
-		egrep '^(openstack|neutron|quantum|qpid)' |
+		egrep '^(openstack|neutron|quantum)' |
 		( [ "$svcprefix" ] && egrep "^(openstack-)?${svcprefix}" || cat )
 }
 
