@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright (C) 2012, Red Hat, Inc.
+# Copyright (C) 2013, Red Hat, Inc.
 # Lars Kellogg-Stedman <lars@redhat.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -26,36 +26,36 @@ systemctl --version >/dev/null 2>&1 && systemctl=1
 # The systemctl command used here comes mostly from:
 # http://fedoraproject.org/wiki/SysVinit_to_Systemd_Cheatsheet
 enabled_services() {
-	if [ "$systemctl" = 1 ]; then
-		systemctl list-unit-files --type=service --full --no-legend --no-pager |
-			awk '$2 == "enabled" {print $1}'| 
-			sed 's/.service$//'
-	else
-		chkconfig --list | grep "${RUNLEVEL}:on" | awk '{print $1}'
-	fi
+  if [ "$systemctl" = 1 ]; then
+    systemctl list-unit-files --type=service --full --no-legend --no-pager |
+      awk '$2 == "enabled" {print $1}' |
+      sed 's/.service$//'
+  else
+    chkconfig --list | grep "${RUNLEVEL}:on" | awk '{print $1}'
+  fi
 }
 
 # This filters the results of enabled_services() for those services
 # related to openstack, and optionally restricts those to ones
 # that start with a specifc prefix (e.g., "cinder" or "glance").
 enabled_openstack_services() {
-	local svcprefix=$1
+  local svcprefix=$1
 
-	enabled_services |
-		egrep '^(openstack|neutron|quantum)' |
-		( [ "$svcprefix" ] && egrep "^(openstack-)?${svcprefix}" || cat )
+  enabled_services |
+    egrep '^(openstack|neutron|quantum)' |
+    ( [ "$svcprefix" ] && egrep "^(openstack-)?${svcprefix}" || cat )
 }
 
 # This calls enable_openstack_services once for each value in "$@", or once
 # with no prefix if there are no arguments.
 generate_service_list() {
-	if [ "$*" ]; then
-		for svcprefix in "$@"; do
-			enabled_openstack_services $svcprefix
-		done 
-	else
-		enabled_openstack_services
-	fi
+  if [ "$*" ]; then
+    for svcprefix in "$@"; do
+      enabled_openstack_services $svcprefix
+    done
+  else
+    enabled_openstack_services
+  fi
 }
 
 # $action may be empty, "list", or any argument appropriate to the "service"
