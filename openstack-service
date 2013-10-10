@@ -16,6 +16,24 @@
 # under the License.
 #
 
+if [ "$#" -lt 1 ] || [ "$1" = '--help' ]; then
+  echo "\
+NAME
+       openstack-service - control enabled openstack services
+
+SYNOPSIS
+       $(basename "$0") <action> [service]...
+
+DESCRIPTION
+       <action> can be 'list' or an action supported by the service.
+       'list' will list the enabled openstack services.
+       Any specified [service]s filter the list of enabled openstack services.
+
+SEE ALSO
+       openstack-status(1)" >&2
+  [ "$1" = '--help' ] && exit 0 || exit 1
+fi
+
 systemctl --version >/dev/null 2>&1 && systemctl=1
 [ "$systemctl" ] || RUNLEVEL=$(LANG=C who -r | sed 's/.*run-level \([0-9]\).*/\1/')
 
@@ -61,12 +79,11 @@ generate_service_list() {
 # $action may be empty, "list", or any argument appropriate to the "service"
 # command.  $action can only be empty if there are no service prefixes
 # on the command line.
-action=$1
+action="$1"
 shift
 
 # Generate a list of services and either print the list on stdout for "list"
 # or use the "service" command to perform the requested action on each of
 # the services.
 generate_service_list "$@" |
-( [ "${action:-list}" = "list" ] && cat || xargs -iSVC service SVC $action )
-
+( [ "$action" = "list" ] && cat || xargs -iSVC service SVC $action )
