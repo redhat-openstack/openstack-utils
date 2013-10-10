@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright (C) 2012, Red Hat, Inc.
+# Copyright (C) 2013, Red Hat, Inc.
 # Lars Kellogg-Stedman <lars@redhat.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -16,6 +16,24 @@
 # under the License.
 #
 
+if [ "$#" -lt 1 ] || [ "$1" = '--help' ]; then
+  echo "\
+NAME
+       openstack-service - control enabled openstack services
+
+SYNOPSIS
+       $(basename "$0") <action> [service]...
+
+DESCRIPTION
+       <action> can be 'list' or an action supported by the service.
+       'list' will list the enabled openstack services.
+       Any specified [service]s filter the list of enabled openstack services.
+
+SEE ALSO
+       openstack-status(1)" >&2
+  [ "$1" = '--help' ] && exit 0 || exit 1
+fi
+
 systemctl --version >/dev/null 2>&1 && systemctl=1
 [ "$systemctl" ] || RUNLEVEL=$(LANG=C who -r | sed 's/.*run-level \([0-9]\).*/\1/')
 
@@ -26,47 +44,52 @@ systemctl --version >/dev/null 2>&1 && systemctl=1
 # The systemctl command used here comes mostly from:
 # http://fedoraproject.org/wiki/SysVinit_to_Systemd_Cheatsheet
 enabled_services() {
-	if [ "$systemctl" = 1 ]; then
-		systemctl list-unit-files --type=service --full --no-legend --no-pager |
-			awk '$2 == "enabled" {print $1}'| 
-			sed 's/.service$//'
-	else
-		chkconfig --list | grep "${RUNLEVEL}:on" | awk '{print $1}'
-	fi
+  if [ "$systemctl" = 1 ]; then
+    if systemctl list-unit-files >/dev/null 2>&1; then
+      systemctl list-unit-files --type=service --full --no-legend --no-pager |
+        awk '$2 == "enabled" {print $1}' |
+        sed 's/.service$//'
+    else
+      # This fallback may list disabled but loaded services
+      systemctl list-units --type=service --full --no-pager |
+        sed -n 's/\.service.*//p'
+    fi
+  else
+    chkconfig --list | grep "${RUNLEVEL}:on" | awk '{print $1}'
+  fi
 }
 
 # This filters the results of enabled_services() for those services
 # related to openstack, and optionally restricts those to ones
 # that start with a specifc prefix (e.g., "cinder" or "glance").
 enabled_openstack_services() {
-	local svcprefix=$1
+  local svcprefix=$1
 
-	enabled_services |
-		egrep '^(openstack|neutron|quantum)' |
-		( [ "$svcprefix" ] && egrep "^(openstack-)?${svcprefix}" || cat )
+  enabled_services |
+    egrep '^(openstack|neutron|quantum)' |
+    ( [ "$svcprefix" ] && egrep "^(openstack-)?${svcprefix}" || cat )
 }
 
 # This calls enable_openstack_services once for each value in "$@", or once
 # with no prefix if there are no arguments.
 generate_service_list() {
-	if [ "$*" ]; then
-		for svcprefix in "$@"; do
-			enabled_openstack_services $svcprefix
-		done 
-	else
-		enabled_openstack_services
-	fi
+  if [ "$*" ]; then
+    for svcprefix in "$@"; do
+      enabled_openstack_services $svcprefix
+    done
+  else
+    enabled_openstack_services
+  fi
 }
 
 # $action may be empty, "list", or any argument appropriate to the "service"
 # command.  $action can only be empty if there are no service prefixes
 # on the command line.
-action=$1
+action="$1"
 shift
 
 # Generate a list of services and either print the list on stdout for "list"
 # or use the "service" command to perform the requested action on each of
 # the services.
 generate_service_list "$@" |
-( [ "${action:-list}" = "list" ] && cat || xargs -iSVC service SVC $action )
-
+( [ "$action" = "list" ] && cat || xargs -iSVC service SVC $action )
