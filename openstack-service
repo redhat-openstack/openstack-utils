@@ -45,9 +45,15 @@ systemctl --version >/dev/null 2>&1 && systemctl=1
 # http://fedoraproject.org/wiki/SysVinit_to_Systemd_Cheatsheet
 enabled_services() {
   if [ "$systemctl" = 1 ]; then
-    systemctl list-unit-files --type=service --full --no-legend --no-pager |
-      awk '$2 == "enabled" {print $1}' |
-      sed 's/.service$//'
+    if systemctl list-unit-files >/dev/null 2>&1; then
+      systemctl list-unit-files --type=service --full --no-legend --no-pager |
+        awk '$2 == "enabled" {print $1}' |
+        sed 's/.service$//'
+    else
+      # This fallback may list disabled but loaded services
+      systemctl list-units --type=service --full --no-pager |
+        sed -n 's/\.service.*//p'
+    fi
   else
     chkconfig --list | grep "${RUNLEVEL}:on" | awk '{print $1}'
   fi
