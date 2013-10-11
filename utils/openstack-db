@@ -36,6 +36,8 @@ Options:
       Drop the database.
   --init
       Initialise the database.
+  --update
+      Update an initialised database.
   --password <pw> | -p <pw>
       Specify the password for user that will be used
       to connect database for the service.  By default the
@@ -64,6 +66,7 @@ while [ $# -gt 0 ]; do
     -h|--help) usage 0 ;;
     --drop) MODE='drop' ;;
     --init) MODE='init' ;;
+    --update) MODE='sync' ;;
     --service) shift; APP=$1 ;;
     -p|--password) shift; MYSQL_APP_PW=$1 ;;
     -r|--rootpw) shift; MYSQL_ROOT_PW=$1 ;;
@@ -85,6 +88,33 @@ case "$APP" in
     printf "Please specify nova|glance|keystone|cinder\n" >&2
     exit 1 ;;
 esac
+
+db_manage()
+{
+  cmd="$1"
+  if [ "${APP}" = "nova" ] || [ "${APP}" = "cinder" ]; then
+    db_cmd="db $cmd"
+  else
+    db_cmd="db_$cmd"
+  fi
+  # Run as $APP user so any newly created (log) files have correct ownership
+  runuser -s /bin/sh $APP -c "$APP-manage $db_cmd"
+}
+
+db_sync() { db_manage sync; }
+db_synced() { db_manage version >/dev/null 2>&1; }
+
+if [ "$MODE" = 'sync' ]; then
+  if ! db_synced; then
+    echo "Can't determine the existing sync level." >&2
+    echo "Please ensure the database is running and already initialised." >&2
+    exit 1
+  else
+    db_sync
+    echo "Complete!"
+    exit
+  fi
+fi
 
 install_mysql_server() {
   if [ -z "${ASSUME_YES}" ]; then
@@ -294,13 +324,7 @@ if [ "$MODE" = 'init' ]; then
 
   # Ask openstack-$APP to sync the db.
   echo "Initializing the $APP database, please wait..."
-  if [ "${APP}" = "nova" ] || [ "${APP}" = "cinder" ]; then
-    db_sync='db sync'
-  else
-    db_sync='db_sync'
-  fi
-  # Run as $APP user so any newly created (log) files have correct ownership
-  runuser -s /bin/sh $APP -c "$APP-manage $db_sync"
+  db_sync
 
   # Do a final sanity check on the database.
   if ! echo "SELECT * FROM migrate_version;" |
