@@ -3,6 +3,8 @@
     print ceilometer alarm services status
   openstack-db:
     Add the --update option to sync the database
+  openstack-service:
+    Add a new util to control enabled openstack services
 
 2013.2-1 17-09-2013
   openstack-status:
