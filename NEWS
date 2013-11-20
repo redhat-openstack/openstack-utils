@@ -1,4 +1,4 @@
-2013.2-? ??-??-????
+2013.2-2 20-11-2013
   openstack-status:
     print ceilometer alarm services status
     don't print nova volume status when not installed
