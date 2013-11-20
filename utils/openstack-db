@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2011 - 2012, Red Hat, Inc.
+# Copyright (C) 2011 - 2013, Red Hat, Inc.
 # Russell Bryant <rbryant@redhat.com>
 # Alan Pevec <apevec@redhat.com>
 #
@@ -82,15 +82,33 @@ if [ ! "$MODE" ] || [ ! "$APP" ]; then
 fi
 
 case "$APP" in
-  nova|glance|keystone|cinder|heat) ;;
+  nova|glance|keystone|cinder|heat|neutron) ;;
   *)
     printf "Unrecognized --service $APP\n" >&2
-    printf "Please specify nova|glance|keystone|cinder|heat\n" >&2
+    printf "Please specify nova|glance|keystone|cinder|heat|neutron\n" >&2
     exit 1 ;;
 esac
 
+neutron_manage() {
+  cmd="$*"
+  [ "$cmd" = 'version' ] && db_cmd='current'
+  [ "$cmd" = 'sync' ] && db_cmd='upgrade head'
+
+  # FIXME: Adjust neutron-db-manage so it doesn't need explicit configs
+  conf_opts=''
+  for conf in '/usr/share/neutron/neutron-dist.conf' \
+              '/etc/neutron/neutron.conf' \
+              '/etc/neutron/plugin.ini'; do
+    test -e "$conf" && conf_opts="$conf_opts --config-file $conf"
+  done
+
+  runuser -s /bin/sh $APP -c "$APP-db-manage $conf_opts $db_cmd"
+}
+
 db_manage()
 {
+  [ "${APP}" = "neutron" ] && { neutron_manage "$@"; return; }
+
   cmd="$1"
   if [ "${APP}" = "nova" ] || [ "${APP}" = "cinder" ]; then
     db_cmd="db $cmd"
@@ -102,7 +120,16 @@ db_manage()
 }
 
 db_sync() { db_manage sync; }
-db_synced() { db_manage version >/dev/null 2>&1; }
+db_synced() {
+  version=$(db_manage version 2>/dev/null) || return 1
+
+  # Neutron doesn't currently set a version in the DB by default.
+  # So ensure this is done before we consider it synced
+  if [ "${APP}" = "neutron" ]; then
+    neutron_ver=$(printf '%s\n' "$version" | awk '/Current revision/ {print $NF}')
+    test "$neutron_ver" != 'None'
+  fi
+}
 
 if [ "$MODE" = 'sync' ]; then
   if ! db_synced; then
@@ -144,6 +171,8 @@ MYSQL_APP_PW_DEFAULT="$APP"
 : ${MYSQL_APP_PW=$MYSQL_APP_PW_DEFAULT}
 if [ "${APP}" = "glance" ]; then
   APP_CONFIG="/etc/$APP/$APP-registry.conf /etc/$APP/$APP-api.conf"
+elif [ "${APP}" = "neutron" ]; then
+  APP_CONFIG="/etc/$APP/$APP.conf /etc/$APP/plugin.ini"
 else
   APP_CONFIG="/etc/$APP/$APP.conf"
 fi
