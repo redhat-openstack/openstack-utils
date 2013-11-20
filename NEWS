@@ -2,6 +2,7 @@
   openstack-status:
     print ceilometer alarm services status
     don't print nova volume status when not installed
+    display nova's view of its services and networks
   openstack-db:
     Add the --update option to sync the database
   openstack-service:

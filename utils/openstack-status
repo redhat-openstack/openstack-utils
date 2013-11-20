@@ -213,6 +213,12 @@ if test "$nova"; then
   if ! test "$keystonerc" && ! test "$NOVA_USERNAME"; then
     test "$keystone" || echo "Warning novarc not sourced" >&2
   else
+    printf "== Nova managed services ==\n"
+    nova service-list
+
+    printf "== Nova networks ==\n"
+    nova network-list
+
     printf "== Nova instance flavors ==\n"
     # Check direct access
     nova flavor-list
