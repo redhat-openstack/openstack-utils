@@ -5,6 +5,7 @@
     display nova's view of its services and networks
   openstack-db:
     Add the --update option to sync the database
+    Allow control of the 'heat' database
   openstack-service:
     Add a new util to control enabled openstack services
 
