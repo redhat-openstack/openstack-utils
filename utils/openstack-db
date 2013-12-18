@@ -121,7 +121,7 @@ db_manage()
 
 db_sync() { db_manage sync; }
 db_synced() {
-  version=$(db_manage version 2>/dev/null) || return 1
+  version=$(db_manage version) || return 1
 
   # Neutron doesn't currently set a version in the DB by default.
   # So ensure this is done before we consider it synced
