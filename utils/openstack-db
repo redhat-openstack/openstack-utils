@@ -107,6 +107,9 @@ neutron_manage() {
 
 db_manage()
 {
+  # ensure $APP-manage.log has correct permissions
+  test -e /var/log/$APP/$APP-manage.log && chown $APP: /var/log/$APP/$APP-manage.log || :
+
   [ "${APP}" = "neutron" ] && { neutron_manage "$@"; return; }
 
   cmd="$1"
@@ -121,7 +124,7 @@ db_manage()
 
 db_sync() { db_manage sync; }
 db_synced() {
-  version=$(db_manage version 2>/dev/null) || return 1
+  version=$(db_manage version) || return 1
 
   # Neutron doesn't currently set a version in the DB by default.
   # So ensure this is done before we consider it synced
