@@ -1,3 +1,7 @@
+2013.2-3 19-01-2014
+  openstack-db:
+    Avoid pemissions issues with 'init' and 'sync'
+
 2013.2-2 20-11-2013
   openstack-status:
     print ceilometer alarm services status
