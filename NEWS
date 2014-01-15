@@ -1,3 +1,7 @@
+201X.X-X dd-mm-yyyy
+  openstack-status:
+    Report status of openstack-cinder-backup on >= Havana
+
 2013.2-3 19-01-2014
   openstack-db:
     Avoid pemissions issues with 'init' and 'sync'

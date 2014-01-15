@@ -168,7 +168,8 @@ fi
 
 if test "$cinder"; then
   printf "== Cinder services ==\n"
-  for service in api scheduler volume; do
+  service_installed openstack-cinder-backup && backup=backup
+  for service in api scheduler volume $backup; do
     check_svc openstack-cinder-$service
   done
 fi
