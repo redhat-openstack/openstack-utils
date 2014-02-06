@@ -323,7 +323,7 @@ fi
 if [ "$MODE" = 'init' ]; then
   echo "Creating '$APP' database." >&2
 cat << EOF
-CREATE DATABASE $APP;
+CREATE DATABASE $APP DEFAULT CHARACTER SET utf8;
 CREATE USER '$APP'@'localhost' IDENTIFIED BY '${MYSQL_APP_PW}';
 CREATE USER '$APP'@'%' IDENTIFIED BY '${MYSQL_APP_PW}';
 GRANT ALL ON $APP.* TO '$APP'@'localhost';
