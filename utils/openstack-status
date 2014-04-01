@@ -36,6 +36,7 @@ rpm -q openstack-swift > /dev/null && swift='swift'
 rpm -q openstack-cinder > /dev/null && cinder='cinder'
 rpm -q openstack-ceilometer-common > /dev/null && ceilometer='ceilometer'
 rpm -q openstack-heat-common > /dev/null && heat='heat'
+rpm -q openstack-sahara > /dev/null && sahara='sahara'
 rpm -q libvirt > /dev/null && libvirtd='libvirtd'
 rpm -q openvswitch > /dev/null && openvswitch='openvswitch'
 rpm -q qpid-cpp-server > /dev/null && qpidd='qpidd'
@@ -187,6 +188,13 @@ if test "$heat"; then
   printf "== Heat services ==\n"
   for service in api api-cfn api-cloudwatch engine; do
     check_svc openstack-heat-$service
+  done
+fi
+
+if test "$sahara"; then
+  printf "== Sahara services ==\n"
+  for service in api; do
+    check_svc openstack-sahara-$service
   done
 fi
 

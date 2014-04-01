@@ -1,6 +1,7 @@
 201X.X-X dd-mm-yyyy
   openstack-status:
     Report status of openstack-cinder-backup on >= Havana
+    Report status of openstack-sahara service
   openstack-db:
     Set default charset for new DBs to UTF8 to avoid migrate issues
 
