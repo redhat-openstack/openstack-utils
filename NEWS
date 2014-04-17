@@ -2,6 +2,7 @@
   openstack-status:
     Report status of openstack-cinder-backup on >= Havana
     Report status of openstack-sahara service
+    Report status of openstack-trove services
   openstack-db:
     Set default charset for new DBs to UTF8 to avoid migrate issues
     Support openstack-trove database setup

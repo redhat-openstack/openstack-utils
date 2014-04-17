@@ -37,6 +37,7 @@ rpm -q openstack-cinder > /dev/null && cinder='cinder'
 rpm -q openstack-ceilometer-common > /dev/null && ceilometer='ceilometer'
 rpm -q openstack-heat-common > /dev/null && heat='heat'
 rpm -q openstack-sahara > /dev/null && sahara='sahara'
+rpm -q openstack-trove > /dev/null && trove='trove'
 rpm -q libvirt > /dev/null && libvirtd='libvirtd'
 rpm -q openvswitch > /dev/null && openvswitch='openvswitch'
 rpm -q qpid-cpp-server > /dev/null && qpidd='qpidd'
@@ -195,6 +196,13 @@ if test "$sahara"; then
   printf "== Sahara services ==\n"
   for service in api; do
     check_svc openstack-sahara-$service
+  done
+fi
+
+if test "$trove"; then
+  printf "== Trove services ==\n"
+  for service in api taskmanager conductor; do
+    check_svc openstack-trove-$service
   done
 fi
 
