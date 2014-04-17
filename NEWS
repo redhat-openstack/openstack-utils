@@ -4,6 +4,7 @@
     Report status of openstack-sahara service
   openstack-db:
     Set default charset for new DBs to UTF8 to avoid migrate issues
+    Support openstack-trove database setup
 
 2013.2-3 19-01-2014
   openstack-db:

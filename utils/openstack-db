@@ -82,10 +82,10 @@ if [ ! "$MODE" ] || [ ! "$APP" ]; then
 fi
 
 case "$APP" in
-  nova|glance|keystone|cinder|heat|neutron) ;;
+  nova|glance|keystone|cinder|heat|neutron|trove) ;;
   *)
     printf "Unrecognized --service $APP\n" >&2
-    printf "Please specify nova|glance|keystone|cinder|heat|neutron\n" >&2
+    printf "Please specify nova|glance|keystone|cinder|heat|neutron|trove\n" >&2
     exit 1 ;;
 esac
 
