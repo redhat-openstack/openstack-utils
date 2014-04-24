@@ -43,6 +43,7 @@ rpm -q openvswitch > /dev/null && openvswitch='openvswitch'
 rpm -q qpid-cpp-server > /dev/null && qpidd='qpidd'
 rpm -q rabbitmq-server > /dev/null && rabbitmq='rabbitmq-server'
 rpm -q memcached > /dev/null && memcached='memcached'
+rpm -q targetd > /dev/null && targetd='targetd' || targetd='tgtd'
 
 if test "$qpidd" && test "$rabbitmq"; then
   # Give preference to rabbit
@@ -72,7 +73,7 @@ service_installed dbus && dbus='dbus' || dbus='messagebus'
 
 if service_enabled openstack-nova-volume 2>/dev/null ||
    service_enabled openstack-cinder-volume 2>/dev/null; then
-  tgtd='tgtd'
+  tgtd="$targetd"
 fi
 
 lsb_to_string() {
