@@ -122,7 +122,13 @@ db_manage()
   runuser -s /bin/sh $APP -c "$APP-manage $db_cmd"
 }
 
-db_sync() { db_manage sync; }
+db_sync() {
+  if ! db_manage sync; then
+    echo "Error updating the database. Please see /var/log/${APP}/ logs for details." >&2
+    exit 1
+  fi
+}
+
 db_synced() {
   version=$(db_manage version) || return 1
 
