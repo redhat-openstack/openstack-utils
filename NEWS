@@ -1,4 +1,7 @@
 2014.1-2 dd-mm-yyyy
+  openstack-service:
+    simplify "status" output on systemd platforms
+    support all systemctl actions on systemd platforms
   openstack-db:
     Improve diagnostics for db sync failure
 

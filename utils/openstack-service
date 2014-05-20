@@ -88,8 +88,27 @@ generate_service_list() {
 action="$1"
 shift
 
+run_action() {
+  SVCs=$(cat)
+
+  if [ "$systemctl" ]; then
+    if [ "$action" = "status" ]; then
+      # Generate simple status like: service status $SVC
+      systemctl show --property=Id,MainPID,ActiveState $SVCs |
+      sed '/^$/d' | paste -d' ' - - - | sed \
+      's/Id=\(.*\)\.service ActiveState=\(.*\) MainPID=\(.*\)/\1 (pid \3) is \2/'
+    else
+      systemctl $action $SVCs
+    fi
+  else
+    for SVC in $SVCs; do
+      service $SVC $action
+    done
+  fi
+}
+
 # Generate a list of services and either print the list on stdout for "list"
 # or use the "service" command to perform the requested action on each of
 # the services.
 generate_service_list "$@" |
-( [ "$action" = "list" ] && cat || xargs -iSVC service SVC $action )
+( [ "$action" = "list" ] && cat || run_action )
