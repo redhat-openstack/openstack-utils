@@ -4,6 +4,8 @@
     support all systemctl actions on systemd platforms
   openstack-db:
     Improve diagnostics for db sync failure
+  openstack-demo-install:
+    Remove no longer supported provisioning script
 
 2014.1-1 24-04-2014
   openstack-status:
