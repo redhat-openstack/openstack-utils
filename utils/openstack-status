@@ -137,6 +137,7 @@ if test "$dashboard"; then
   printf "== Horizon service ==\n"
   horizon_status="$(curl -L -s -w '%{http_code}\n' http://localhost/dashboard -o /dev/null)"
   [ "$horizon_status" = 200 ] && horizon_status=active
+  [ "$horizon_status" = 000 ] && horizon_status=uncontactable
   printf '%-40s%s\n' "openstack-dashboard:" "$horizon_status"
 fi
 

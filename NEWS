@@ -8,6 +8,7 @@
     Remove no longer supported provisioning script
   openstack-status:
     Handle dashboard redirect from http to https
+    Improve status for uncontactable httpd
 
 2014.1-1 24-04-2014
   openstack-status:
