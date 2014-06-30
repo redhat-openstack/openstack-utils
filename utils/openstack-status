@@ -26,6 +26,8 @@ for conf in nova/nova.conf keystone/keystone.conf glance/glance-registry.conf; d
     fi
 done
 
+let return_value=0
+
 rpm -q openstack-nova-common > /dev/null && nova='nova'
 rpm -q openstack-glance > /dev/null && glance='glance'
 rpm -q openstack-dashboard > /dev/null && dashboard='httpd'
@@ -106,6 +108,9 @@ check_svc() {
   if [ "$bootstatus" = 'disabled' ]; then
     bootstatus='(disabled on boot)'
   else
+    if [ "$status" != 'active' ]; then
+      (( return_value += 1 ))
+    fi
     bootstatus=''
   fi
 
@@ -247,3 +252,5 @@ if test "$nova"; then
     nova list # instances
   fi
 fi
+
+exit $return_value
