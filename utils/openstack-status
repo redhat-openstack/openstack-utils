@@ -182,7 +182,8 @@ if test "$ceilometer"; then
   printf "== Ceilometer services ==\n"
   service_installed openstack-ceilometer-alarm-notifier && notifier=alarm-notifier
   service_installed openstack-ceilometer-alarm-evaluator && evaluator=alarm-evaluator
-  for service in api central compute collector $notifier $evaluator; do
+  service_installed openstack-ceilometer-notification && notification=notification
+  for service in api central compute collector $notifier $evaluator $notification; do
     check_svc openstack-ceilometer-$service
   done
 fi
