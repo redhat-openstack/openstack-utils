@@ -150,7 +150,7 @@ if test "$neutron"; then
     check_svc "$neutron-$agent-agent"
   done
   # Optional agents
-  for agent in openvswitch linuxbridge ryu nec mlnx; do
+  for agent in openvswitch linuxbridge ryu nec mlnx metering; do
     service_installed $neutron-$agent-agent &&
     check_svc "$neutron-$agent-agent"
   done
