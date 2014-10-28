@@ -56,7 +56,10 @@ if test "$qpidd" && test "$rabbitmq"; then
 fi
 
 service_installed() {
-  PAGER= systemctl show $1.service >/dev/null 2>&1 ||
+  {
+    systemctl list-unit-files --type service --full --all ||
+    systemctl list-units --full --all --type service
+  } 2>/dev/null | grep -q "^$1\.service" ||
   chkconfig --list $1 >//dev/null 2>&1
 }
 
