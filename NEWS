@@ -1,4 +1,4 @@
-2014.2-1 DD-MM-YYY
+2014.2-1 08-12-2014
   openstack-status:
     don't display status for uninstalled services on systemd platforms
     list "target" service status instead of obsolete "tgtd"
