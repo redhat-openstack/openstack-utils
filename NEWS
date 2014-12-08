@@ -2,6 +2,8 @@
   openstack-status:
     don't display status for uninstalled services on systemd platforms
     list "target" service status instead of obsolete "tgtd"
+    list openstack-ceilometer-notification service
+    list neutron-metering-agent service
   openstack-service:
     neutron-ovs-cleanup is excluded from restart as that breaks tap devices
 
