@@ -38,6 +38,8 @@ rpm -q openstack-ceilometer-common > /dev/null && ceilometer='ceilometer'
 rpm -q openstack-heat-common > /dev/null && heat='heat'
 rpm -q openstack-sahara > /dev/null && sahara='sahara'
 rpm -q openstack-trove > /dev/null && trove='trove'
+rpm -q openstack-tuskar > /dev/null && tuskar='tuskar'
+rpm -q openstack-ironic-common > /dev/null && ironic='ironic'
 rpm -q libvirt > /dev/null && libvirtd='libvirtd'
 rpm -q openvswitch > /dev/null && openvswitch='openvswitch'
 rpm -q qpid-cpp-server > /dev/null && qpidd='qpidd'
@@ -210,6 +212,20 @@ if test "$trove"; then
   printf "== Trove services ==\n"
   for service in api taskmanager conductor; do
     check_svc openstack-trove-$service
+  done
+fi
+
+if test "$tuskar"; then
+  printf "== Tuskar services ==\n"
+  for service in api; do
+    check_svc openstack-tuskar-$service
+  done
+fi
+
+if test "$ironic"; then
+  printf "== Ironic services ==\n"
+  for service in api conductor; do
+    check_svc openstack-ironic-$service
   done
 fi
 
