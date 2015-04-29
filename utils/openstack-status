@@ -265,6 +265,6 @@ if test "$nova"; then
 
     printf "== Nova instances ==\n"
     # Check access through the API
-    nova list # instances
+    nova list --all-tenants # instances
   fi
 fi
