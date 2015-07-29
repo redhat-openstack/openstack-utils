@@ -203,7 +203,7 @@ fi
 
 if test "$sahara"; then
   printf "== Sahara services ==\n"
-  for service in api; do
+  for service in all; do
     check_svc openstack-sahara-$service
   done
 fi

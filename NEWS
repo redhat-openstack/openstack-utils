@@ -4,6 +4,7 @@
       cells console consoleauth xvpvncproxy spicehtml5proxy serialproxy
     list tuskar and ironic services
     list nova instances for all tenants, not just current openstack user
+    list sahara-all status rather than sahara-api
 
 2014.2-1 08-12-2014
   openstack-status:
