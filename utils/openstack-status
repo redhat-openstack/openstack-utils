@@ -203,7 +203,14 @@ fi
 
 if test "$sahara"; then
   printf "== Sahara services ==\n"
-  for service in all; do
+  if service_enabled 'openstack-sahara-engine'; then
+    sahara_services='api engine'
+  elif service_enabled 'openstack-sahara-api'; then
+    sahara_services='api'
+  else
+    sahara_services='all'
+  fi
+  for service in $sahara_services; do
     check_svc openstack-sahara-$service
   done
 fi
