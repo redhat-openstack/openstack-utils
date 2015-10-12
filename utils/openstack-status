@@ -21,7 +21,7 @@ systemctl --version >/dev/null 2>&1 && systemctl=1
 
 for conf in nova/nova.conf keystone/keystone.conf glance/glance-registry.conf; do
     if grep -qF 'connection = mysql' /etc/$conf 2>/dev/null; then
-        mysqld='mysqld'
+        mysqld='mariadb'
         break;
     fi
 done
