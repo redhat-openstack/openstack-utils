@@ -1,4 +1,4 @@
-2015.1-1 ??-??-????
+2015.2-1 07-12-2015
   openstack-status:
     list all nova optional services, now including:
       cells console consoleauth xvpvncproxy spicehtml5proxy serialproxy
