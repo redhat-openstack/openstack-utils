@@ -19,10 +19,27 @@
 systemctl --version >/dev/null 2>&1 && systemctl=1
 [ "$systemctl" ] || RUNLEVEL=$(LANG=C who -r | sed 's/.*run-level \([0-9]\).*/\1/')
 
+# Figure out what provides mysqld services, if installed locally
+get_mysql_variant() {
+    local r
+    r=$(rpm -q --whatprovides mysql-server)
+    if [ $? -ne 0 ]; then
+        return 1
+    fi
+    # using bash would be faster/less forks: r=${r/-*/}
+    r=$(echo $r | cut -f1 -d-)
+    if [ "$r" = "mysql" ]; then
+        echo mysqld
+        return 0
+    fi
+    echo $r
+}
+
+
 for conf in nova/nova.conf keystone/keystone.conf glance/glance-registry.conf; do
     if grep -qF 'connection = mysql' /etc/$conf 2>/dev/null; then
-        mysqld='mysqld'
-        break;
+        mysqld=$(get_mysql_variant)
+        break
     fi
 done
 
