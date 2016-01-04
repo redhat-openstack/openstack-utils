@@ -107,6 +107,14 @@ run_action() {
   fi
 }
 
+# Non-LSB actions
+case $action in
+help)
+  man $(basename $0)
+  exit $?
+  ;;
+esac
+
 # Generate a list of services and either print the list on stdout for "list"
 # or use the "service" command to perform the requested action on each of
 # the services.
