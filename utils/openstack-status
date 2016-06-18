@@ -168,7 +168,7 @@ if test "$neutron"; then
   printf "== $neutron services ==\n"
   for svc in $neutron-server; do check_svc "$svc"; done
   # Default agents
-  for agent in dhcp l3 metadata lbaas; do
+  for agent in dhcp l3 metadata lbaas lbaasv2; do
     service_installed $neutron-$agent-agent &&
     check_svc "$neutron-$agent-agent"
   done
