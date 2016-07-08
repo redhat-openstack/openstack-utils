@@ -1,6 +1,9 @@
-2016.1-1 dd-07-2016
-  openstack-db
-    Remove out-of-date utility
+2016.1-1 11-07-2016
+  openstack-db:
+    remove out-of-date utility
+  openstack-status:
+    autodetect mysql variant
+    add status check for lbaasv2 agent
 
 2015.2-1 07-12-2015
   openstack-status:
