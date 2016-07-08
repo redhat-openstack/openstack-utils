@@ -1,5 +1,5 @@
 name = openstack-utils
-version = 2015.2
+version = 2016.1
 release = 1
 
 all:
