@@ -264,7 +264,7 @@ if test "$keystone"; then
     echo "Warning keystonerc not sourced" >&2
   else
     keystonerc=1
-    keystone user-list
+    openstack user list
   fi
 fi
 
