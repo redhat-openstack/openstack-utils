@@ -270,7 +270,7 @@ fi
 
 if test "$keystonerc" && test "$glance"; then
   printf "== Glance images ==\n"
-  glance image-list
+  openstack image list
 fi
 
 if test "$nova"; then
