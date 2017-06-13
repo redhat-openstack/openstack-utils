@@ -289,6 +289,6 @@ if test "$nova"; then
 
     printf "== Nova instances ==\n"
     # Check access through the API
-    nova list --all-tenants # instances
+    openstack server list # instances
   fi
 fi
