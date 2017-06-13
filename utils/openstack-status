@@ -281,7 +281,7 @@ if test "$nova"; then
     nova service-list
 
     printf "== Nova networks ==\n"
-    nova network-list
+    openstack network list
 
     printf "== Nova instance flavors ==\n"
     # Check direct access
